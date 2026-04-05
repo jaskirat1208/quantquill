@@ -1,2 +1,2 @@
-# Quant-quill-5
+# Quant-quill-6
 Another alpha generation attempt
