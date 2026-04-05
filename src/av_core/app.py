@@ -56,7 +56,9 @@ class App:
         if(not config_file):
             config_file = f"./configs/{__name__}{'.' + instance_name if instance_name else ''}.cnf"
         self.logger = LoggerConfig.setup(log_file=log_file)
-        self.config = CredentialsReader(config_file).getConfig() if config_file else None
+
+        cred_reader = CredentialsReader(config_file)
+        self.config = cred_reader.getConfig()
         self.logger.info("Application initialized successfully.")
         
 # Example usage
