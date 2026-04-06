@@ -3,7 +3,7 @@ import requests
 from datetime import datetime
 import json
 import os
-
+import time
 from av_core.logger import LoggerConfig
 from data.angel_one.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH
 
@@ -100,22 +100,27 @@ class SmartConnect(api.SmartConnect):
             raise e
 
     def _request(self, route, method, parameters=None, num_retries=3):
-        try:
-            while(num_retries > 0 ):
+        while(num_retries > 0 ):
+            try:
                 res = super()._request(route, method, parameters)
                 if(res['errorcode']):
                     self.logger.error(f"Error in _request: {res['errorcode']}")
+                    if(res['errorcode'] == 'AG8002'):
+                        self.logger.warning("Access token expired, renewing...")
+                        self.renewAccessToken()
+                        self.logger.info("Access token renewed successfully. Please ensure your tokens are upto date.")
+                        num_retries -= 1
+                        continue
+
                     raise Exception(f"API Error: {res['errorcode']} - {res.get('message', '')}")
-                if(res['errorcode'] == 'AG8002'):
-                    self.logger.warning("Access token expired, renewing...")
-                    self.renewAccessToken()
-                    self.logger.info("Access token renewed successfully. Please ensure your tokens are upto date.")
-                    num_retries -= 1
                 else:
                     return res
-        except Exception as e:
-            self.logger.error(f"Error in _request: {e}")
-            raise e
+            except Exception as e:
+                self.logger.error(f"Error in _request: {e}")
+                num_retries -= 1
+                time.sleep(1)
+                if num_retries == 0:
+                    raise e
 
     def renewAccessToken(self):
         response =self._postRequest('api.refresh', {
@@ -132,10 +137,8 @@ class SmartConnect(api.SmartConnect):
         if "feedToken" in response['data']:
             tokenSet['feedToken']=response['data']['feedToken']
 
-        tokenSet['clientcode']=self. userId   
+        tokenSet['clientcode']=self.userId   
         tokenSet['refreshToken']=response['data']["refreshToken"]
-        tokenSet['jwtToken'] = response['data']['jwtToken']
-        tokenSet['feedToken'] = response['data']['feedToken']
        
         return tokenSet
 
