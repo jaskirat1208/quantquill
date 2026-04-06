@@ -99,6 +99,46 @@ class SmartConnect(api.SmartConnect):
             self.logger.error(f"Error fetching instrument details for token {token}: {e}")
             raise e
 
+    def _request(self, route, method, parameters=None, num_retries=3):
+        try:
+            while(num_retries > 0 ):
+                res = super()._request(route, method, parameters)
+                if(res['errorcode']):
+                    self.logger.error(f"Error in _request: {res['errorcode']}")
+                    raise Exception(f"API Error: {res['errorcode']} - {res.get('message', '')}")
+                if(res['errorcode'] == 'AG8002'):
+                    self.logger.warning("Access token expired, renewing...")
+                    self.renewAccessToken()
+                    self.logger.info("Access token renewed successfully. Please ensure your tokens are upto date.")
+                    num_retries -= 1
+                else:
+                    return res
+        except Exception as e:
+            self.logger.error(f"Error in _request: {e}")
+            raise e
+
+    def renewAccessToken(self):
+        response =self._postRequest('api.refresh', {
+            "jwtToken": self.access_token,
+            "refreshToken": self.refresh_token,
+            
+        })
+       
+        tokenSet={}
+
+        if "jwtToken" in response['data']:
+            tokenSet['jwtToken']=response['data']['jwtToken']
+
+        if "feedToken" in response['data']:
+            tokenSet['feedToken']=response['data']['feedToken']
+
+        tokenSet['clientcode']=self. userId   
+        tokenSet['refreshToken']=response['data']["refreshToken"]
+        tokenSet['jwtToken'] = response['data']['jwtToken']
+        tokenSet['feedToken'] = response['data']['feedToken']
+       
+        return tokenSet
+
 if __name__ == "__main__":
     app = SmartConnect()
     pass
