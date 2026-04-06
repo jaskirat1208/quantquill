@@ -7,7 +7,8 @@ import shutil
 from datetime import datetime
 
 import sys
-sys.path.append('/home/jaskirat/projects/quant-quill/src')
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from data.angel_one.SmartAPIWithInstruments import SmartConnect
 from data.angel_one.constants import INSTRUMENTS_CACHE_PATH, INSTRUMENTS_URL
@@ -71,9 +72,10 @@ class TestSmartConnect(unittest.TestCase):
             self.assertEqual(self.smart_connect.symbol_map['NIFTY 50']['token'], '99926000')
             self.assertEqual(self.smart_connect.token_map['99926001']['symbol'], 'BANKNIFTY')
     
+    @patch('data.angel_one.SmartAPIWithInstruments.os.makedirs')
     @patch('data.angel_one.SmartAPIWithInstruments.os.path.exists')
     @patch('data.angel_one.SmartAPIWithInstruments.datetime')
-    def test_loadInstruments_from_api(self, mock_datetime, mock_exists):
+    def test_loadInstruments_from_api(self, mock_datetime, mock_exists, mock_makedirs):
         """Test loading instruments from API when cache doesn't exist."""
         mock_datetime.now.return_value.strftime.return_value = '20231201'
         mock_exists.return_value = False
@@ -86,6 +88,9 @@ class TestSmartConnect(unittest.TestCase):
             # Verify maps are created
             self.assertEqual(len(self.smart_connect.symbol_map), 2)
             self.assertEqual(len(self.smart_connect.token_map), 2)
+            
+            # Verify directory was created
+            mock_makedirs.assert_called_once()
             
             # Verify file was written
             mock_file.assert_called_with(f"{INSTRUMENTS_CACHE_PATH}instruments.20231201.json", 'w')

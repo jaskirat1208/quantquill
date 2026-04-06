@@ -9,7 +9,6 @@ class PriceLoggerApp(AngelOneSmartApp):
 
     def start(self):
         self.logger.info("PriceLoggerApp started.")
-        self.m_client
         # Add logic to subscribe to price updates and log them
 
 if(__name__ == "__main__"):

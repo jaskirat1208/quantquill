@@ -16,10 +16,10 @@ class SmartConnect(api.SmartConnect):
 
     def loadInstruments(self):
         """
-        Loads the list of instruments for the specified exchange and stores it in the instance variable.
+        Loads the list of instruments and builds symbol/token lookup maps.
 
-        Args:
-            exchange (str): The name of the exchange for which to load instruments.
+        Instruments are cached locally by date. If today's cache exists, it is loaded
+        from disk; otherwise instruments are fetched from the API and saved to cache.
         """
         instruments_file_path = f"{INSTRUMENTS_CACHE_PATH}instruments.{datetime.now().strftime('%Y%m%d')}.json"
         instruments = []
@@ -34,6 +34,7 @@ class SmartConnect(api.SmartConnect):
                 instruments = self._fetchInstrumentsFromAPI()
                 self.logger.info(f"Fetched instruments from API. Total instruments: {len(instruments)}")
                 # Save it to a file for faster access in the future
+                os.makedirs(os.path.dirname(instruments_file_path), exist_ok=True)
                 with open(instruments_file_path, 'w') as f:
                     json.dump(instruments, f)
 
@@ -56,8 +57,9 @@ class SmartConnect(api.SmartConnect):
         self.logger.info(f"Symbol map and token map created with {len(self.symbol_map)} entries each.")
 
     def _fetchInstrumentsFromAPI(self):
-        instruments_json = requests.get(INSTRUMENTS_URL)
-        return instruments_json.json()
+        response = requests.get(INSTRUMENTS_URL)
+        response.raise_for_status()
+        return response.json()
 
     def getInstrumentBySymbol(self, symbol: str):
         """
@@ -99,5 +101,4 @@ class SmartConnect(api.SmartConnect):
 
 if __name__ == "__main__":
     app = SmartConnect()
-    app.loadInstruments()
     pass
