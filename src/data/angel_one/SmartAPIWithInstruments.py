@@ -22,6 +22,7 @@ class SmartConnect(api.SmartConnect):
             exchange (str): The name of the exchange for which to load instruments.
         """
         instruments_file_path = f"{INSTRUMENTS_CACHE_PATH}instruments.{datetime.now().strftime('%Y%m%d')}.json"
+        instruments = []
         try:
             # Check if the instruments file for today already exists            
             if os.path.exists(instruments_file_path):
