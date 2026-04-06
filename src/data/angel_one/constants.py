@@ -5,3 +5,19 @@ k_SECRET_KEY = 'secret_key'
 k_TOTP_KEY = 'totp_key'
 k_PASSWORD = 'password'
 k_USER_ID = 'user_id'
+
+
+INSTRUMENTS_URL = 'https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json'
+
+INSTRUMENTS_CACHE_PATH = '/opt/jazz/data/quantquill/smartapi/instruments/'
+
+
+# Instrument field keys
+k_TOKEN = 'token'
+k_SYMBOL = 'symbol'
+k_NAME = 'name'
+k_EXPIRY = 'expiry'
+k_STRIKE = 'strike'
+k_LOTSIZE = 'lotsize'
+k_INSTRUMENTTYPE = 'instrumenttype'
+k_EXCH_SEG = 'exch_seg'

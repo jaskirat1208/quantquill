@@ -1,15 +1,16 @@
 from typing import Optional
 import pyotp
 
-from SmartApi import SmartConnect
 from av_core import app as av_core
 from av_core.cred_reader import CredentialsReader
 from data.angel_one import constants
+from data.angel_one.SmartAPIWithInstruments import SmartConnect
+
 
 class AngelOneSmartApp(av_core.App):
     def __init__(self, config_file: Optional[str] = None, log_file: Optional[str] = None, instance_name: str = ""):
         super().__init__(config_file=config_file, log_file=log_file, instance_name=instance_name)
-        keys_file = self.config.get('keys_file', '.keys.cnf')
+        keys_file = self.config['DEFAULT'].get('keys_file', '.keys.cnf')
         cred_reader = CredentialsReader(keys_file)
         creds = cred_reader.get_credentials('angel_one')
         self.m_api_key = creds[constants.k_API_KEY]
@@ -19,6 +20,8 @@ class AngelOneSmartApp(av_core.App):
 
         self.m_client = SmartConnect(api_key=self.m_api_key)
         self.logger.info("ABSmartApp initialized with credentials for Angel One API.")
+        # You can now use the client with the generated session for further API calls    
+        self.create_session()
 
     def create_session(self):
         """
@@ -48,12 +51,6 @@ class AngelOneSmartApp(av_core.App):
 
     def start(self):
         self.logger.info("ABSmartApp started.")
-        
-        self.create_session()
-        
-        
-        
-            # You can now use the client with the generated session for further API calls    
 
     def stop(self):
         self.logger.info("ABSmartApp stopping. Cleaning up resources...")
