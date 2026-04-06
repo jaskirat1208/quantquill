@@ -6,9 +6,7 @@ import tempfile
 import shutil
 from datetime import datetime
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', 'src'))
 
 from data.angel_one.SmartAPIWithInstruments import SmartConnect
 from data.angel_one.constants import INSTRUMENTS_CACHE_PATH, INSTRUMENTS_URL
@@ -43,8 +41,9 @@ class TestSmartConnect(unittest.TestCase):
             }
         ]
         
-        # Mock the parent class
-        with patch('data.angel_one.SmartAPIWithInstruments.api.SmartConnect.__init__'):
+        # Mock the parent class and prevent loadInstruments from being called during init
+        with patch('data.angel_one.SmartAPIWithInstruments.api.SmartConnect.__init__'), \
+             patch.object(SmartConnect, 'loadInstruments'):
             self.smart_connect = SmartConnect()
             self.smart_connect.logger = Mock()
     
