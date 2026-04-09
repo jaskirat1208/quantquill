@@ -23,11 +23,6 @@ class BaseStrategy:
     Depending on market data implementation, you can initialize  necessary market data subscriptions in the constructor and initite the market data feed. 
     """
     def __init__(self, *args):
-        # if('name' in args):
-        #     self.name = args['name']
-
-        # self.name = type(self).__name__
-        # self.logger = LoggerConfig.setup(name=self.name)
         pass
 
     def load(self):
