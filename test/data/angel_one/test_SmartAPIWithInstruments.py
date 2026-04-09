@@ -7,9 +7,10 @@ import shutil
 from datetime import datetime
 
 import os
-
-from data.angel_one.SmartAPIWithInstruments import SmartConnect
-from data.angel_one.constants import INSTRUMENTS_CACHE_PATH, INSTRUMENTS_URL
+import sys
+print(sys.path)
+from data.angel_one.utils.SmartAPIWithInstruments import SmartConnect
+from data.angel_one.utils.constants import INSTRUMENTS_CACHE_PATH, INSTRUMENTS_URL
 
 
 class TestSmartConnect(unittest.TestCase):
@@ -42,21 +43,21 @@ class TestSmartConnect(unittest.TestCase):
         ]
         
         # Mock the parent class and prevent loadInstruments from being called during init
-        with patch('data.angel_one.SmartAPIWithInstruments.api.SmartConnect.__init__'), \
+        with patch('data.angel_one.utils.SmartAPIWithInstruments.api.SmartConnect.__init__'), \
              patch.object(SmartConnect, 'loadInstruments'):
             self.smart_connect = SmartConnect()
             self.smart_connect.logger = Mock()
     
     def test_init_calls_loadInstruments(self):
         """Test that loadInstruments is called during initialization."""
-        with patch('data.angel_one.SmartAPIWithInstruments.api.SmartConnect.__init__'), \
+        with patch('data.angel_one.utils.SmartAPIWithInstruments.api.SmartConnect.__init__'), \
              patch.object(SmartConnect, 'loadInstruments') as mock_load:
             
             smart_connect = SmartConnect()
             mock_load.assert_called_once()
     
-    @patch('data.angel_one.SmartAPIWithInstruments.os.path.exists')
-    @patch('data.angel_one.SmartAPIWithInstruments.datetime')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.os.path.exists')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.datetime')
     def test_loadInstruments_from_cache(self, mock_datetime, mock_exists):
         """Test loading instruments from cache file."""
         mock_datetime.now.return_value.strftime.return_value = '20231201'
@@ -71,9 +72,9 @@ class TestSmartConnect(unittest.TestCase):
             self.assertEqual(self.smart_connect.symbol_map['NIFTY 50']['token'], '99926000')
             self.assertEqual(self.smart_connect.token_map['99926001']['symbol'], 'BANKNIFTY')
     
-    @patch('data.angel_one.SmartAPIWithInstruments.os.makedirs')
-    @patch('data.angel_one.SmartAPIWithInstruments.os.path.exists')
-    @patch('data.angel_one.SmartAPIWithInstruments.datetime')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.os.makedirs')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.os.path.exists')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.datetime')
     def test_loadInstruments_from_api(self, mock_datetime, mock_exists, mock_makedirs):
         """Test loading instruments from API when cache doesn't exist."""
         mock_datetime.now.return_value.strftime.return_value = '20231201'
@@ -94,8 +95,8 @@ class TestSmartConnect(unittest.TestCase):
             # Verify file was written
             mock_file.assert_called_with(f"{INSTRUMENTS_CACHE_PATH}instruments.20231201.json", 'w')
     
-    @patch('data.angel_one.SmartAPIWithInstruments.os.path.exists')
-    @patch('data.angel_one.SmartAPIWithInstruments.datetime')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.os.path.exists')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.datetime')
     def test_loadInstruments_handles_missing_fields(self, mock_datetime, mock_exists):
         """Test that instruments missing symbol or token fields are skipped."""
         mock_datetime.now.return_value.strftime.return_value = '20231201'
@@ -117,8 +118,8 @@ class TestSmartConnect(unittest.TestCase):
             self.assertIn('NIFTY 50', self.smart_connect.symbol_map)
             self.assertIn('99926000', self.smart_connect.token_map)
     
-    @patch('data.angel_one.SmartAPIWithInstruments.os.path.exists')
-    @patch('data.angel_one.SmartAPIWithInstruments.datetime')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.os.path.exists')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.datetime')
     def test_loadInstruments_handles_exception(self, mock_datetime, mock_exists):
         """Test that exceptions during loading are handled gracefully."""
         mock_datetime.now.return_value.strftime.return_value = '20231201'
@@ -132,7 +133,7 @@ class TestSmartConnect(unittest.TestCase):
             self.assertEqual(len(self.smart_connect.token_map), 0)
             self.smart_connect.logger.error.assert_called()
     
-    @patch('data.angel_one.SmartAPIWithInstruments.requests.get')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.requests.get')
     def test_fetchInstrumentsFromAPI(self, mock_get):
         """Test fetching instruments from API."""
         mock_response = Mock()
@@ -213,17 +214,17 @@ class TestSmartConnectIntegration(unittest.TestCase):
         """Clean up integration test fixtures."""
         shutil.rmtree(self.temp_dir, ignore_errors=True)
     
-    @patch('data.angel_one.SmartAPIWithInstruments.api.SmartConnect.__init__')
+    @patch('data.angel_one.utils.SmartAPIWithInstruments.api.SmartConnect.__init__')
     def test_full_loadInstruments_workflow(self, mock_parent_init):
         """Test the complete loadInstruments workflow with real file operations."""
         # Mock the cache path to use temp directory
-        with patch('data.angel_one.SmartAPIWithInstruments.INSTRUMENTS_CACHE_PATH', self.temp_dir + '/'):
+        with patch('data.angel_one.utils.SmartAPIWithInstruments.INSTRUMENTS_CACHE_PATH', self.temp_dir + '/'):
             with patch.object(SmartConnect, '_fetchInstrumentsFromAPI') as mock_fetch:
                 mock_fetch.return_value = [
                     {"token": "99926000", "symbol": "NIFTY 50", "name": "NIFTY"}
                 ]
                 
-                with patch('data.angel_one.SmartAPIWithInstruments.datetime') as mock_datetime:
+                with patch('data.angel_one.utils.SmartAPIWithInstruments.datetime') as mock_datetime:
                     mock_datetime.now.return_value.strftime.return_value = '20231201'
                     
                     smart_connect = SmartConnect()
