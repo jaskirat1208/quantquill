@@ -3,8 +3,8 @@ import pyotp
 
 from av_core import app as av_core
 from av_core.cred_reader import CredentialsReader
-from data.angel_one import constants
-from data.angel_one.SmartAPIWithInstruments import SmartConnect
+from data.angel_one.utils import constants
+from data.angel_one.utils.SmartAPIWithInstruments import SmartConnect
 
 
 class AngelOneSmartApp(av_core.App):

@@ -1,15 +1,26 @@
 from strats import BaseStrat
 from typing import Optional
+from data.angel_one.platform.BackTestStrategyPlatform import BackTestStrategyPlatform
+from strats.BaseStrat import OHLCQuote
+from av_core.logger import LoggerConfig
 
 class PriceSaverStrat(BaseStrat.BaseStrategy):
-    def __init__(self, config_file: Optional[str] = None, log_file: Optional[str] = None, instance_name: str = ""):
-        super().__init__(config_file=config_file, log_file=log_file, instance_name=instance_name)
+    def __init__(self):
+        super().__init__(self)
+        self.logger = LoggerConfig.get_logger("PriceSaverStrat")
         self.logger.info("PriceSaverStrat initialized successfully.")
 
     def start(self):
         self.logger.info("PriceSaverStrat started.")
         # Initialize any necessary resources or subscriptions here
+    
+    def on_md(self, quote: OHLCQuote):
+        self.logger.info(f"Received MD: {quote}")
+
 
 if(__name__ == "__main__"):
-    strat = PriceSaverStrat()
-    strat.start()
+    pf = BackTestStrategyPlatform()
+    s1 = PriceSaverStrat()
+    pf.add_strat(s1)
+    pf.set_backtest_data_params(["99926000", "99926001"], "2025-09-06 11:15", "2026-02-30 12:00", "ONE_MINUTE")
+    pf.start()

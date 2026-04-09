@@ -5,7 +5,7 @@ import json
 import os
 import time
 from av_core.logger import LoggerConfig
-from data.angel_one.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH
+from data.angel_one.utils.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH
 
 class SmartConnect(api.SmartConnect):
 
