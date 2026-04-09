@@ -5,7 +5,7 @@ from av_core.logger import LoggerConfig
 from data.angel_one.app import AngelOneSmartApp
 from strats.BaseStrat import BaseStrategy, OHLCQuote
 
-class BackTestPlatform(AngelOneSmartApp):
+class BackTestStrategyPlatform(AngelOneSmartApp):
     def __init__(self, config_file: Optional[str] = None, log_file: Optional[str] = None, instance_name: str = ""):
         AngelOneSmartApp.__init__(self, config_file=config_file, log_file=log_file, instance_name=instance_name)
         self.strats = []
@@ -53,7 +53,7 @@ class BackTestPlatform(AngelOneSmartApp):
 
     def on_md(self, md):
         # Process market data for backtesting
-        print("Tick received", md)
+        self.logger.debug("Tick received", md)
 
     def start(self):
         """
