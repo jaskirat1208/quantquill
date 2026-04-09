@@ -2,7 +2,7 @@
 from datetime import datetime
 from typing import Optional
 from av_core.logger import LoggerConfig
-from data.angel_one.app import AngelOneSmartApp
+from data.angel_one.utils.app import AngelOneSmartApp
 from strats.BaseStrat import BaseStrategy, OHLCQuote
 
 class BackTestStrategyPlatform(AngelOneSmartApp):

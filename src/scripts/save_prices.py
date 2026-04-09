@@ -1,6 +1,6 @@
 from strats import BaseStrat
 from typing import Optional
-from strats.smartapi.BackTestStrategyPlatform import BackTestStrategyPlatform
+from data.angel_one.platform.BackTestStrategyPlatform import BackTestStrategyPlatform
 from strats.BaseStrat import OHLCQuote
 from av_core.logger import LoggerConfig
 
