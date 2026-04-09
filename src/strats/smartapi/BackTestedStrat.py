@@ -5,12 +5,15 @@ from av_core.logger import LoggerConfig
 from data.angel_one.app import AngelOneSmartApp
 from strats.BaseStrat import BaseStrategy, OHLCQuote
 
-class BackTestedStrat(BaseStrategy, AngelOneSmartApp):
+class BackTestPlatform(AngelOneSmartApp):
     def __init__(self, config_file: Optional[str] = None, log_file: Optional[str] = None, instance_name: str = ""):
         AngelOneSmartApp.__init__(self, config_file=config_file, log_file=log_file, instance_name=instance_name)
-    
-    def init_strategy_params(self, symbols, start_date, end_date, interval):
-        super().__init__()
+        self.strats = []
+
+    def add_strat(self, strat):
+        self.strats.append(strat)
+
+    def set_backtest_data_params(self, symbols, start_date, end_date, interval):
         self.symbols = symbols
         self.start_date = start_date
         self.end_date = end_date
@@ -69,12 +72,13 @@ class BackTestedStrat(BaseStrategy, AngelOneSmartApp):
                     md = self.candle_info[symbol].pop(0)
                     md_obj = OHLCQuote(symbol, md[0], md[1], md[2], md[3], md[4], md[5])
                     self.on_md(md_obj)
+                    for strat in self.strats:
+                        strat.on_md(md_obj)
             if all(symbol not in self.candle_info or not self.candle_info[symbol] for symbol in self.symbols):
                 finished = True        
 
 
 if(__name__ == "__main__"):
-    app = BackTestedStrat()
-    app.init_strategy_params(["99926000", "99926001"], "2025-09-06 11:15", "2026-02-30 12:00", "ONE_MINUTE")
+    app = BackTestPlatform()
+    app.set_backtest_data_params(["99926000", "99926001"], "2025-09-06 11:15", "2026-02-30 12:00", "ONE_MINUTE")
     app.start()
-    # app.summary()
