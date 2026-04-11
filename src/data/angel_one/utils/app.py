@@ -63,6 +63,9 @@ class AngelOneSmartApp(av_core.App):
         # Clean up any resources, close connections, etc. here
         self.logger.info("ABSmartApp stopped.")
 
+    def get_client(self):
+        return self.m_client
+
 if(__name__ == "__main__"):
     app = AngelOneSmartApp()
     app.start()
