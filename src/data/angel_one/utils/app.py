@@ -66,6 +66,9 @@ class AngelOneSmartApp(av_core.App):
     def get_client(self):
         return self.m_client
 
+    def get_logger(self):
+        return self.logger
+
 if(__name__ == "__main__"):
     app = AngelOneSmartApp()
     app.start()
