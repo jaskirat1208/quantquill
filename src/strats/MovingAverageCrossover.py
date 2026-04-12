@@ -24,6 +24,7 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
         self.long_ewma = 0
         self.trend = Trend.OTHER
         self.ewma_history_df = []
+        self.trades_history = []  # Track all booked trades
         self.no_of_crossovers = 0
 
     
@@ -37,15 +38,23 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
         
         if self.short_ewma > self.long_ewma:
             new_trend = Trend.UP
-            self.pf.book_trade(pm.Trade(token="99926001", quantity=1, price=quote.close_price, side=pm.Side.BUY, timestamp=quote.timestamp))
         elif self.short_ewma < self.long_ewma:
             new_trend = Trend.DOWN
-            self.pf.book_trade(pm.Trade(token="99926001", quantity=1, price=quote.close_price, side=pm.Side.SELL, timestamp=quote.timestamp))
         
         if new_trend != self.trend:
             self.logger.info(f"Trend changed from {self.trend} to {new_trend}")
             self.trend = new_trend
             self.no_of_crossovers += 1
+            if(new_trend == Trend.UP):
+                self.logger.info(f"Buy signal at price {quote.close_price}")
+                trade = pm.Trade(token="99926001", quantity=1, price=quote.close_price, side=pm.Side.BUY, timestamp=quote.timestamp)
+                self.pf.book_trade(trade)
+                self.trades_history.append(trade)  # Track the trade
+            elif(new_trend == Trend.DOWN):
+                self.logger.info(f"Sell signal at price {quote.close_price}")
+                trade = pm.Trade(token="99926001", quantity=1, price=quote.close_price, side=pm.Side.SELL, timestamp=quote.timestamp)
+                self.pf.book_trade(trade)
+                self.trades_history.append(trade)  # Track the trade
 
         self.ewma_history_df.append({
             'timestamp': datetime.fromisoformat(quote.timestamp),
@@ -56,8 +65,41 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
     def summary(self):
         ewma_history_df = pd.DataFrame(self.ewma_history_df)
         fig = go.Figure()
+        
+        # Add EMA lines
         fig.add_trace(go.Scatter(x=ewma_history_df['timestamp'], y=ewma_history_df['short_ewma'], mode='lines', name='Short EMA'))
         fig.add_trace(go.Scatter(x=ewma_history_df['timestamp'], y=ewma_history_df['long_ewma'], mode='lines', name='Long EMA'))
+        
+        # Add trade markers
+        if self.trades_history:
+            trade_times = [datetime.fromisoformat(trade.timestamp) for trade in self.trades_history]
+            trade_prices = [trade.price for trade in self.trades_history]
+            trade_sides = ['BUY' if trade.side == pm.Side.BUY else 'SELL' for trade in self.trades_history]
+            
+            # Buy trades (green triangles)
+            buy_times = [trade_times[i] for i, side in enumerate(trade_sides) if side == 'BUY']
+            buy_prices = [trade_prices[i] for i, side in enumerate(trade_sides) if side == 'BUY']
+            if buy_times:
+                fig.add_trace(go.Scatter(
+                    x=buy_times, 
+                    y=buy_prices, 
+                    mode='markers', 
+                    name='Buy Trades',
+                    marker=dict(symbol='triangle-up', size=10, color='green')
+                ))
+            
+            # Sell trades (red triangles)
+            sell_times = [trade_times[i] for i, side in enumerate(trade_sides) if side == 'SELL']
+            sell_prices = [trade_prices[i] for i, side in enumerate(trade_sides) if side == 'SELL']
+            if sell_times:
+                fig.add_trace(go.Scatter(
+                    x=sell_times, 
+                    y=sell_prices, 
+                    mode='markers', 
+                    name='Sell Trades',
+                    marker=dict(symbol='triangle-down', size=10, color='red')
+                ))
+        
         fig.show()
 
         return {
@@ -65,6 +107,13 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
             "long_ewma": self.long_ewma,
             "trend": self.trend.value,
             "no_of_crossovers": self.no_of_crossovers,
+            "total_trades": len(self.trades_history),
+            "trades": [{
+                "timestamp": trade.timestamp,
+                "price": trade.price,
+                "side": "BUY" if trade.side == pm.Side.BUY else "SELL",
+                "quantity": trade.quantity
+            } for trade in self.trades_history],
             "pnl": self.pf.get_position_manager().get_positions()
         }
 
