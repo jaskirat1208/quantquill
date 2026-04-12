@@ -24,7 +24,6 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
         self.long_ewma = 0
         self.trend = Trend.OTHER
         self.ewma_history_df = []
-        self.first_cross_detected = False
         self.no_of_crossovers = 0
 
     
@@ -65,7 +64,7 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
             "short_ewma": self.short_ewma,
             "long_ewma": self.long_ewma,
             "trend": self.trend.value,
-            "no_of_crossovers": len(self.ewma_history_df) - 1,
+            "no_of_crossovers": self.no_of_crossovers,
             "pnl": self.pf.get_position_manager().get_positions()
         }
 
@@ -74,7 +73,7 @@ if __name__ == "__main__":
     pf = BackTestStrategyPlatform()
     client = pf.get_client()
     instrument = client.getInstrumentBySymbol("BAJFINANCE")
-    pf.set_backtest_data_params(["99926001"], "2024-09-06 11:15", "2026-02-30 12:00", "ONE_MINUTE")
+    pf.set_backtest_data_params(["99926001"], "2024-09-06 11:15", "2026-02-28 12:00", "ONE_MINUTE")
     strategy = MovingAverageCrossoverStrategy()
     strategy.set_logger(pf.get_logger())
     strategy.set_platform(pf)
