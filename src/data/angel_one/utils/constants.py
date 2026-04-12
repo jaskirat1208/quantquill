@@ -21,3 +21,14 @@ k_STRIKE = 'strike'
 k_LOTSIZE = 'lotsize'
 k_INSTRUMENTTYPE = 'instrumenttype'
 k_EXCH_SEG = 'exch_seg'
+
+CANDLE_INFO_MAX_DAYS = {
+    "ONE_MINUTE": 30,
+    "THREE_MINUTE": 60,
+    "FIVE_MINUTE": 100,
+    "TEN_MINUTE": 100,
+    "FIFTEEN_MINUTE": 200,
+    "THIRTY_MINUTE": 200,
+    "ONE_HOUR": 400,
+    "ONE_DAY": 2000
+}
