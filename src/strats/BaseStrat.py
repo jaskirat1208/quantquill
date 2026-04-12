@@ -22,8 +22,14 @@ class BaseStrategy:
         cfg (dict, optional): A dictionary containing configuration parameters for the strategy. Defaults to None.
     Depending on market data implementation, you can initialize  necessary market data subscriptions in the constructor and initite the market data feed. 
     """
-    def __init__(self, *args):
-        pass
+    def __init__(self, **kwargs):
+        if('logger' in kwargs):
+            self.logger = kwargs['logger']
+        else:
+            self.logger = LoggerConfig.get_logger(self.__class__.__name__)
+
+    def set_platform(self, pf):
+        self.pf = pf
 
     def load(self):
         """

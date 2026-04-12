@@ -4,10 +4,12 @@ from typing import Optional
 from av_core.logger import LoggerConfig
 from data.angel_one.utils.app import AngelOneSmartApp
 from strats.BaseStrat import BaseStrategy, OHLCQuote
+from av_core.components import PositionManager as pm
 
 class BackTestStrategyPlatform(AngelOneSmartApp):
     def __init__(self, config_file: Optional[str] = None, log_file: Optional[str] = None, instance_name: str = ""):
         AngelOneSmartApp.__init__(self, config_file=config_file, log_file=log_file, instance_name=instance_name)
+        self.position_manager = pm.PositionManager()
         self.strats = []
 
     def add_strat(self, strat):
@@ -51,9 +53,12 @@ class BackTestStrategyPlatform(AngelOneSmartApp):
         for symbol in self.symbols:
             self.subscribe_md(symbol, self.start_date, self.end_date, self.interval)
 
-    def on_md(self, md):
+    def on_md(self, md_obj: OHLCQuote):
         # Process market data for backtesting
-        self.logger.debug("Tick received", md)
+        self.position_manager.on_md(md_obj)
+        for strat in self.strats:
+            strat.on_md(md_obj)
+
 
     def start(self):
         """
@@ -72,13 +77,18 @@ class BackTestStrategyPlatform(AngelOneSmartApp):
                     md = self.candle_info[symbol].pop(0)
                     md_obj = OHLCQuote(symbol, md[0], md[1], md[2], md[3], md[4], md[5])
                     self.on_md(md_obj)
-                    for strat in self.strats:
-                        strat.on_md(md_obj)
             if all(symbol not in self.candle_info or not self.candle_info[symbol] for symbol in self.symbols):
                 finished = True        
 
+    def book_trade(self, trade: pm.Trade):
+        # Process trade data for backtesting
+        self.logger.debug("Trade received", trade)
+        self.position_manager.book_trade(trade)
+
+    def get_position_manager(self):
+        return self.position_manager
 
 if(__name__ == "__main__"):
-    app = BackTestPlatform()
-    app.set_backtest_data_params(["99926000", "99926001"], "2025-09-06 11:15", "2026-02-30 12:00", "ONE_MINUTE")
+    app = BackTestStrategyPlatform()
+    app.set_backtest_data_params(["99926000", "99926001"], "2025-09-06 11:15", "2026-02-28 12:00", "ONE_MINUTE")
     app.start()
