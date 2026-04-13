@@ -104,6 +104,10 @@ class SmartConnect(api.SmartConnect):
         now = datetime.now()
         if not hasattr(self, '_rate_limited_calls'):
             self._rate_limited_calls = {}
+
+        # Clean up entries older than 1 minute
+        self._rate_limited_calls = {k: v for k, v in self._rate_limited_calls.items() 
+                                   if now.second - k <= 60}
         if now.second in self._rate_limited_calls:
             self._rate_limited_calls[now.second] += 1
         else:
@@ -112,9 +116,9 @@ class SmartConnect(api.SmartConnect):
             self.logger.warning(f"Rate limited: too many requests in one second. Retrying in 1 second.")
             time.sleep(1)
             return self._request(route, method, parameters, num_retries)
-        return self._requestHeloer(route, method, parameters, num_retries)
+        return self._requestHelper(route, method, parameters, num_retries)
 
-    def _requestHeloer(self, route, method, parameters=None, num_retries=3):
+    def _requestHelper(self, route, method, parameters=None, num_retries=3):
         while(num_retries > 0 ):
             try:
                 res = super()._request(route, method, parameters)
@@ -159,28 +163,33 @@ class SmartConnect(api.SmartConnect):
 
     def getCandleDataMultiDay(self, historicDataParams):
         """
-        Get candle data for a token.
-        
+        Get candle data for extended periods by splitting requests into chunks.
+                
         Args:
-            token (str): The token for which to get candle data.
-            from_date (str): The start date for the candle data.
-            to_date (str): The end date for the candle data.
-            interval (str): The interval for the candle data. Defaults to "ONE_MINUTE".
-        
+            historicDataParams (dict): Dictionary containing:
+                - exchange (str): Exchange name
+                - symboltoken (str): Token symbol
+                - interval (str): Time interval
+                - fromdate (str): Start date in ISO format
+                - todate (str): End date in ISO format
+                
         Returns:
-            dict: The candle data for the specified token.
+            dict: Dictionary with 'data' key containing candle data list
         """
         try:
             fromdate = datetime.fromisoformat(historicDataParams.get("fromdate"))
             todate = datetime.fromisoformat(historicDataParams.get("todate"))
 
-            
-            max_days = CANDLE_INFO_MAX_DAYS[historicDataParams.get("interval")]
+            interval = historicDataParams.get("interval")
+            if interval not in CANDLE_INFO_MAX_DAYS:
+                raise ValueError(f"Unsupported interval: {interval}")
+            max_days = CANDLE_INFO_MAX_DAYS[interval]
             if (todate - fromdate).days > max_days:
                 candle_data = []
-                for i in range((todate - fromdate).days // max_days):
-                    new_fromdate = fromdate + timedelta(days=max_days * i)
-                    new_todate = min(fromdate + timedelta(days=max_days * (i + 1)), todate)
+                total_days = (todate - fromdate).days + 1  # Include both start and end dates
+                for i in range(0, total_days, max_days):
+                    new_fromdate = fromdate + timedelta(days=i)
+                    new_todate = min(fromdate + timedelta(days=i + max_days - 1), todate)
                     self.logger.info(f"Fetching candle data for {historicDataParams['symboltoken']} from {new_fromdate} to {new_todate}")
                     single_day_candle_data = super().getCandleData({
                         "exchange": historicDataParams["exchange"],
