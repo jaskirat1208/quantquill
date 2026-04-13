@@ -26,12 +26,19 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
         self.ewma_history_df = []
         self.trades_history = []  # Track all booked trades
         self.no_of_crossovers = 0
+        self.first_time = True
 
     
     def set_logger(self, logger):
         self.logger = logger
     
     def on_md(self, quote: OHLCQuote):
+        if self.first_time:
+            self.short_ewma = quote.close_price
+            self.long_ewma = quote.close_price
+            self.first_time = False
+            return
+
         self.short_ewma = self.short_alpha * quote.close_price + (1 - self.short_alpha) * self.short_ewma
         self.long_ewma = self.long_alpha * quote.close_price + (1 - self.long_alpha) * self.long_ewma
         new_trend = Trend.OTHER
@@ -108,12 +115,6 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
             "trend": self.trend.value,
             "no_of_crossovers": self.no_of_crossovers,
             "total_trades": len(self.trades_history),
-            "trades": [{
-                "timestamp": trade.timestamp,
-                "price": trade.price,
-                "side": "BUY" if trade.side == pm.Side.BUY else "SELL",
-                "quantity": trade.quantity
-            } for trade in self.trades_history],
             "pnl": self.pf.get_position_manager().get_positions()
         }
 

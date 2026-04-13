@@ -37,7 +37,7 @@ class BackTestStrategyPlatform(AngelOneSmartApp):
         }
         # Subscribe to market data using the parameters
         self.logger.info("Fetching historical candle data for backtesting...")
-        candle_info = self.m_client.getCandleData(candle_info_params)
+        candle_info = self.m_client.getCandleDataMultiDay(candle_info_params)
         self.candle_info[symbol] += (candle_info['data'])
         self.logger.info(f"Successfully fetched candle data for symbol: {symbol}")
         if symbol not in self.candle_info:

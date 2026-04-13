@@ -1,11 +1,12 @@
 import SmartApi as api
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 import time
 from av_core.logger import LoggerConfig
-from data.angel_one.utils.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH
+from data.angel_one.utils.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH, CANDLE_INFO_MAX_DAYS
+
 
 class SmartConnect(api.SmartConnect):
 
@@ -100,6 +101,24 @@ class SmartConnect(api.SmartConnect):
             raise e
 
     def _request(self, route, method, parameters=None, num_retries=3):
+        now = datetime.now()
+        if not hasattr(self, '_rate_limited_calls'):
+            self._rate_limited_calls = {}
+
+        # Clean up entries older than 1 minute
+        self._rate_limited_calls = {k: v for k, v in self._rate_limited_calls.items() 
+                                   if now.second - k <= 60}
+        if now.second in self._rate_limited_calls:
+            self._rate_limited_calls[now.second] += 1
+        else:
+            self._rate_limited_calls[now.second] = 1
+        if self._rate_limited_calls[now.second] > 5:
+            self.logger.warning(f"Rate limited: too many requests in one second. Retrying in 1 second.")
+            time.sleep(1)
+            return self._request(route, method, parameters, num_retries)
+        return self._requestHelper(route, method, parameters, num_retries)
+
+    def _requestHelper(self, route, method, parameters=None, num_retries=3):
         while(num_retries > 0 ):
             try:
                 res = super()._request(route, method, parameters)
@@ -141,6 +160,58 @@ class SmartConnect(api.SmartConnect):
         tokenSet['refreshToken']=response['data']["refreshToken"]
        
         return tokenSet
+
+    def getCandleDataMultiDay(self, historicDataParams):
+        """
+        Get candle data for extended periods by splitting requests into chunks.
+                
+        Args:
+            historicDataParams (dict): Dictionary containing:
+                - exchange (str): Exchange name
+                - symboltoken (str): Token symbol
+                - interval (str): Time interval
+                - fromdate (str): Start date in ISO format
+                - todate (str): End date in ISO format
+                
+        Returns:
+            dict: Dictionary with 'data' key containing candle data list
+        """
+        try:
+            fromdate = datetime.fromisoformat(historicDataParams.get("fromdate"))
+            todate = datetime.fromisoformat(historicDataParams.get("todate"))
+
+            interval = historicDataParams.get("interval")
+            if interval not in CANDLE_INFO_MAX_DAYS:
+                raise ValueError(f"Unsupported interval: {interval}")
+            max_days = CANDLE_INFO_MAX_DAYS[interval]
+            if (todate - fromdate).days > max_days:
+                candle_data = []
+                total_days = (todate - fromdate).days + 1  # Include both start and end dates
+                for i in range(0, total_days, max_days):
+                    new_fromdate = fromdate + timedelta(days=i)
+                    new_todate = min(fromdate + timedelta(days=i + max_days - 1), todate)
+                    self.logger.info(f"Fetching candle data for {historicDataParams['symboltoken']} from {new_fromdate} to {new_todate}")
+                    single_day_candle_data = super().getCandleData({
+                        "exchange": historicDataParams["exchange"],
+                        "symboltoken": historicDataParams["symboltoken"],
+                        "interval": historicDataParams["interval"],
+                        "fromdate": new_fromdate.strftime('%Y-%m-%d %H:%M'),
+                        "todate": new_todate.strftime('%Y-%m-%d %H:%M')
+                    })
+                    candle_data += single_day_candle_data['data']
+                
+                self.logger.info(f"Total candle data fetched for {historicDataParams['symboltoken']}: {len(candle_data)}")
+                
+                return {'data': candle_data}
+            
+
+            
+            candle_data = super().getCandleData(historicDataParams)
+            return candle_data
+        except Exception as e:
+            self.logger.error(f"Error fetching candle data: {e}")
+            raise e
+
 
 if __name__ == "__main__":
     app = SmartConnect()
