@@ -1,5 +1,5 @@
 from enum import Enum
-from strats.BaseStrat import OHLCQuote
+from quantquill.strats.BaseStrat import OHLCQuote
 from datetime import datetime
 
 class Side(Enum):

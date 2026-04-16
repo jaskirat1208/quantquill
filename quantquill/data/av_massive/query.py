@@ -1,5 +1,5 @@
 from massive import RESTClient
-from av_core.cred_reader import CredentialsReader
+from quantquill.av_core.cred_reader import CredentialsReader
 import time
 import requests
 

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from av_core.logger import LoggerConfig
+from quantquill.av_core.logger import LoggerConfig
 
 class OHLCQuote:
     def __init__(self, symbol, timestamp, open_price, high_price, low_price, close_price, volume):

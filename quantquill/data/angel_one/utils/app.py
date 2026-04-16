@@ -1,10 +1,10 @@
 from typing import Optional
 import pyotp
 
-from av_core import app as av_core
-from av_core.cred_reader import CredentialsReader
-from data.angel_one.utils import constants
-from data.angel_one.utils.SmartAPIWithInstruments import SmartConnect
+from quantquill.av_core import app as av_core
+from quantquill.av_core.cred_reader import CredentialsReader
+from quantquill.data.angel_one.utils import constants
+from quantquill.data.angel_one.utils.SmartAPIWithInstruments import SmartConnect
 
 
 class AngelOneSmartApp(av_core.App):
