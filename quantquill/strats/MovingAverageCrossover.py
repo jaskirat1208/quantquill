@@ -1,12 +1,12 @@
 
 
-from strats.BaseStrat import BaseStrategy, OHLCQuote
-from data.angel_one.platform.BackTestStrategyPlatform import BackTestStrategyPlatform
+from quantquill.strats.BaseStrat import BaseStrategy, OHLCQuote
+from quantquill.data.angel_one.platform.BackTestStrategyPlatform import BackTestStrategyPlatform
 from enum import Enum
 import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime
-from av_core.components import PositionManager as pm
+from quantquill.av_core.components import PositionManager as pm
 
 class Trend(Enum):
     OTHER = 0

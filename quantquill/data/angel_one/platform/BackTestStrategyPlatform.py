@@ -1,10 +1,10 @@
 
 from datetime import datetime
 from typing import Optional
-from av_core.logger import LoggerConfig
-from data.angel_one.utils.app import AngelOneSmartApp
-from strats.BaseStrat import BaseStrategy, OHLCQuote
-from av_core.components import PositionManager as pm
+from quantquill.av_core.logger import LoggerConfig
+from quantquill.data.angel_one.utils.app import AngelOneSmartApp
+from quantquill.strats.BaseStrat import BaseStrategy, OHLCQuote
+from quantquill.av_core.components import PositionManager as pm
 
 class BackTestStrategyPlatform(AngelOneSmartApp):
     def __init__(self, config_file: Optional[str] = None, log_file: Optional[str] = None, instance_name: str = ""):

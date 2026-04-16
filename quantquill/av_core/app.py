@@ -1,6 +1,6 @@
-from av_core.logger import LoggerConfig
+from quantquill.av_core.logger import LoggerConfig
 from typing import Optional
-from av_core.cred_reader import CredentialsReader
+from quantquill.av_core.cred_reader import CredentialsReader
 
 
 class App:

@@ -1,4 +1,4 @@
-from data.av_massive import query as massive_query
+from quantquill.data.av_massive import query as massive_query
 from datetime import datetime
 
 if __name__ == "__main__":

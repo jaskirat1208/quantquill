@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import json
 import os
 import time
-from av_core.logger import LoggerConfig
-from data.angel_one.utils.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH, CANDLE_INFO_MAX_DAYS
+from quantquill.av_core.logger import LoggerConfig
+from quantquill.data.angel_one.utils.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH, CANDLE_INFO_MAX_DAYS
 
 
 class SmartConnect(api.SmartConnect):

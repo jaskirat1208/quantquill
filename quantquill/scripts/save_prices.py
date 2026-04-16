@@ -1,8 +1,8 @@
-from strats import BaseStrat
+from quantquill.strats import BaseStrat
 from typing import Optional
-from data.angel_one.platform.BackTestStrategyPlatform import BackTestStrategyPlatform
-from strats.BaseStrat import OHLCQuote
-from av_core.logger import LoggerConfig
+from quantquill.data.angel_one.platform.BackTestStrategyPlatform import BackTestStrategyPlatform
+from quantquill.strats.BaseStrat import OHLCQuote
+from quantquill.av_core.logger import LoggerConfig
 
 class PriceSaverStrat(BaseStrat.BaseStrategy):
     def __init__(self):

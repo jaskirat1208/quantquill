@@ -1,7 +1,7 @@
 from typing import Optional
 import time
 
-from data.angel_one.utils.app import AngelOneSmartApp
+from quantquill.data.angel_one.utils.app import AngelOneSmartApp
 
 
 class PriceLoggerApp(AngelOneSmartApp):
