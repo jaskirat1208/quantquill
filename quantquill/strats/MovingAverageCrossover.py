@@ -1,12 +1,14 @@
 
 
-from quantquill.strats.BaseStrat import BaseStrategy, OHLCQuote
+from quantquill.strats.BaseStrat import BaseStrategy
+from quantquill.types import OHLCQuote
 from quantquill.data.angel_one.platform.BackTestStrategyPlatform import BackTestStrategyPlatform
 from enum import Enum
 import plotly.graph_objects as go
 import pandas as pd
 from datetime import datetime
 from quantquill.av_core.components import PositionManager as pm
+from quantquill.types import Trade
 
 class Trend(Enum):
     OTHER = 0
@@ -54,12 +56,12 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
             self.no_of_crossovers += 1
             if(new_trend == Trend.UP):
                 self.logger.info(f"Buy signal at price {quote.close_price}")
-                trade = pm.Trade(token="99926001", quantity=1, price=quote.close_price, side=pm.Side.BUY, timestamp=quote.timestamp)
+                trade = Trade(token="99926001", quantity=1, price=quote.close_price, side="BUY", timestamp=quote.timestamp)
                 self.pf.book_trade(trade)
                 self.trades_history.append(trade)  # Track the trade
             elif(new_trend == Trend.DOWN):
                 self.logger.info(f"Sell signal at price {quote.close_price}")
-                trade = pm.Trade(token="99926001", quantity=1, price=quote.close_price, side=pm.Side.SELL, timestamp=quote.timestamp)
+                trade = Trade(token="99926001", quantity=1, price=quote.close_price, side="SELL", timestamp=quote.timestamp)
                 self.pf.book_trade(trade)
                 self.trades_history.append(trade)  # Track the trade
 
@@ -81,7 +83,7 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
         if self.trades_history:
             trade_times = [datetime.fromisoformat(trade.timestamp) for trade in self.trades_history]
             trade_prices = [trade.price for trade in self.trades_history]
-            trade_sides = ['BUY' if trade.side == pm.Side.BUY else 'SELL' for trade in self.trades_history]
+            trade_sides = ['BUY' if trade.side == 'BUY' else 'SELL' for trade in self.trades_history]
             
             # Buy trades (green triangles)
             buy_times = [trade_times[i] for i, side in enumerate(trade_sides) if side == 'BUY']

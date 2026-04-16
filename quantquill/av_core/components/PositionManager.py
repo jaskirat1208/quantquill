@@ -1,24 +1,10 @@
 from enum import Enum
-from quantquill.strats.BaseStrat import OHLCQuote
+from quantquill.types import OHLCQuote, Trade
 from datetime import datetime
 
 class Side(Enum):
     BUY = "BUY"
     SELL = "SELL"
-
-class Trade:    
-    def __init__(self, token: str, quantity: float = 0, price: float = 0, side: Side = Side.BUY, timestamp: int = 0, trade_id: int = 0, tx_cost: int = 0):
-        self.token = token
-        self.quantity = quantity
-        self.price = price
-        self.side = side
-        self.timestamp = timestamp
-        self.trade_id = trade_id
-        self.tx_cost = tx_cost
-
-    def __repr__(self):
-        return f"Trade(token={self.token}, quantity={self.quantity}, price={self.price}, side={self.side}, timestamp={self.timestamp}, trade_id={self.trade_id}, tx_cost={self.tx_cost})"
-
 
 class Position:  
     def __init__(self, token: str, quantity: float = 0, avg_price: float = 0):
