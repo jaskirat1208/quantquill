@@ -1,19 +1,7 @@
 from typing import Optional
 
 from quantquill.av_core.logger import LoggerConfig
-
-class OHLCQuote:
-    def __init__(self, symbol, timestamp, open_price, high_price, low_price, close_price, volume):
-        self.timestamp = timestamp
-        self.open_price = open_price
-        self.high_price = high_price
-        self.low_price = low_price
-        self.close_price = close_price
-        self.symbol = symbol
-        self.volume = volume
-
-    def __repr__(self):
-        return f"OHLCQuote(symbol={self.symbol}, timestamp={self.timestamp}, open={self.open_price}, high={self.high_price}, low={self.low_price}, close={self.close_price}, volume={self.volume})"
+from quantquill.types import OHLCQuote
 
 class BaseStrategy:
     """

@@ -5,6 +5,7 @@ from quantquill.av_core.logger import LoggerConfig
 from quantquill.data.angel_one.utils.app import AngelOneSmartApp
 from quantquill.strats.BaseStrat import BaseStrategy, OHLCQuote
 from quantquill.av_core.components import PositionManager as pm
+from quantquill.types import Trade
 
 class BackTestStrategyPlatform(AngelOneSmartApp):
     def __init__(self, config_file: Optional[str] = None, log_file: Optional[str] = None, instance_name: str = ""):
@@ -80,7 +81,7 @@ class BackTestStrategyPlatform(AngelOneSmartApp):
             if all(symbol not in self.candle_info or not self.candle_info[symbol] for symbol in self.symbols):
                 finished = True        
 
-    def book_trade(self, trade: pm.Trade):
+    def book_trade(self, trade: Trade):
         # Process trade data for backtesting
         self.logger.debug("Trade received", trade)
         self.position_manager.book_trade(trade)
