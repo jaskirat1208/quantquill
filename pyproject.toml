@@ -57,11 +57,11 @@ Repository = "https://github.com/jaskirat1208/quantquill.git"
 quantquill = "quantquill.cli:main"
 
 [tool.setuptools]
-package-dir = {"" = "."}
+package-dir = {"" = "packages"}
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["quantquill*"]
+where = ["packages"]
+include = ["quantquill*", "alpha_server*"]
 exclude = ["test*"]
 
 [tool.setuptools.package-data]
