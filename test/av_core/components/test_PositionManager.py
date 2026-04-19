@@ -3,8 +3,8 @@ import sys
 import os
 
 
-from av_core.components.PositionManager import PositionManager, Trade, Side, Position
-from strats.BaseStrat import OHLCQuote
+from quantquill.av_core.components.PositionManager import PositionManager, Trade, Side, Position
+from quantquill.strats.BaseStrat import OHLCQuote
 
 
 class TestPositionManager(unittest.TestCase):
