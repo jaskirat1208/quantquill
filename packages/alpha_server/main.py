@@ -3,9 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 
-# Import strategy executor
+# Import strategy executor (relative imports for running from alpha_server directory)
 from models.models import StrategyExecutor
-from core.route_registry import auto_discover_routers
+from core.route_registry import registry
+import sys
+print(f"Python path: {sys.path}")
+print(f"Working dir: {__import__('os').getcwd()}")
+
+# Import routers to trigger auto-registration
+import routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -32,8 +38,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Auto-discover and include all routers
-auto_discover_routers(app, "routers")
+# Include all registered routers from the registry
+print("Including registered routers...")
+for router in registry.get_all_routers():
+    app.include_router(router)
+    print(f"  Included router: {router.prefix if router.prefix else '/'}")
+
+# Print all registered routes for debugging
+print("All registered routes:")
+for route in app.routes:
+    if hasattr(route, 'methods'):
+        print(f"  {list(route.methods)} {route.path}")
+    else:
+        print(f"  {route.path}")
+
+# Fallback root endpoint
+@app.get("/")
+async def root():
+    return {"message": "Alpha Server - QuantQuill API", "status": "running", "docs": "/docs"}
 
 if __name__ == "__main__":
     uvicorn.run(
