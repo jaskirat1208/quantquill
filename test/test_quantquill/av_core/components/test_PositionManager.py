@@ -2,11 +2,9 @@ import unittest
 import sys
 import os
 
-# Add the src directory to the path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
-from src.av_core.components.PositionManager import PositionManager, Trade, Side, Position
-from src.strats.BaseStrat import OHLCQuote
+from quantquill.av_core.components.PositionManager import PositionManager, Trade, Side, Position
+from quantquill.strats.BaseStrat import OHLCQuote
 
 
 class TestPositionManager(unittest.TestCase):
