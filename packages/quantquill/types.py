@@ -12,6 +12,7 @@ from typing import Optional
 @dataclass
 class OHLCQuote:
     """OHLC (Open, High, Low, Close) market data quote."""
+    symbol: str
     timestamp: str
     open_price: float
     high_price: float
