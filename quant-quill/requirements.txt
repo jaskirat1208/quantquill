@@ -1,6 +1,0 @@
-smartapi-python==1.5.5
-plotly>=6.6.0
-pandas>=2.3.0
-logzero>=1.7.0
-pyotp>=2.9.0
-websocket>=0.2.1
