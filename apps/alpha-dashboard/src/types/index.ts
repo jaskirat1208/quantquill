@@ -60,3 +60,33 @@ export interface ChartPanelProps {
 export interface TradesTableProps {
   trades: Trade[]
 }
+
+// Instrument Types
+export interface Instrument {
+  token?: string
+  symbol?: string
+  name?: string
+  expiry?: string
+  strike?: number
+  lotsize?: number
+  instrumenttype?: string
+  exch_seg?: string
+  tick_size?: number
+  [key: string]: any
+}
+
+export interface InstrumentsResponse {
+  instruments: Instrument[]
+  pagination: {
+    page: number
+    page_size: number
+    total_items: number
+    total_pages: number
+    has_next: boolean
+    has_prev: boolean
+  }
+}
+
+export interface InstrumentsTableProps {
+  instruments?: Instrument[]
+}

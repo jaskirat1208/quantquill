@@ -5,8 +5,8 @@ This module contains the Angel One specific implementations for market data,
 trade execution, and backtesting functionality.
 """
 
-from .platform import BackTestStrategyPlatform
+from . import platform
 
 __all__ = [
-    "BackTestStrategyPlatform",
+    "platform",
 ]
