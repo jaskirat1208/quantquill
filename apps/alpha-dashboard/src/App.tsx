@@ -12,6 +12,7 @@ import Sidebar from './components/Sidebar'
 import StrategyPanel from './components/StrategyPanel'
 import ChartPanel from './components/ChartPanel'
 import TradesTable from './components/TradesTable'
+import InstrumentsTable from './components/InstrumentsTable'
 import StatCard from './components/StatCard'
 import type { StrategyResult } from './types'
 
@@ -90,18 +91,25 @@ function App() {
             </Grid>
           </Grid>
 
-          {/* Main Content */}
-          <Grid container spacing={3} sx={{ mb: 4 }}>
-            <Grid item xs={12} lg={6}>
-              <StrategyPanel onResults={handleStrategyResults} />
-            </Grid>
-            <Grid item xs={12} lg={6}>
-              <ChartPanel strategyResults={strategyResults} />
-            </Grid>
-          </Grid>
+          {/* Conditional Content Based on Active Tab */}
+          {activeTab === 'instruments' ? (
+            <InstrumentsTable />
+          ) : (
+            <>
+              {/* Main Content */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} lg={6}>
+                  <StrategyPanel onResults={handleStrategyResults} />
+                </Grid>
+                <Grid item xs={12} lg={6}>
+                  <ChartPanel strategyResults={strategyResults} />
+                </Grid>
+              </Grid>
 
-          {/* Trades Table */}
-          <TradesTable trades={strategyResults?.trades || []} />
+              {/* Trades Table */}
+              <TradesTable trades={strategyResults?.trades || []} />
+            </>
+          )}
         </Box>
       </Box>
     </ThemeProvider>

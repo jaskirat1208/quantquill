@@ -15,7 +15,8 @@ import {
   PlayArrow as PlayIcon,
   Assessment as AssessmentIcon,
   Settings as SettingsIcon,
-  Help as HelpIcon
+  Help as HelpIcon,
+  TableChart as TableIcon
 } from '@mui/icons-material'
 import type { SidebarProps } from '../types'
 
@@ -23,6 +24,7 @@ const menuItems = [
   { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
   { id: 'execute', label: 'Execute Strategy', icon: PlayIcon },
   { id: 'results', label: 'Results', icon: AssessmentIcon },
+  { id: 'instruments', label: 'Instruments', icon: TableIcon },
   { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
 

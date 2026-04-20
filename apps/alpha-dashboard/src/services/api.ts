@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios'
-import type { StrategyResult, StrategiesResponse, MovingAverageParams, RSIParams } from '../types'
+import type { StrategyResult, StrategiesResponse, MovingAverageParams, RSIParams, Instrument, InstrumentsResponse } from '../types'
 
 const api: AxiosInstance = axios.create({
   baseURL: '/api',
@@ -13,6 +13,20 @@ export const strategyApi = {
   getStrategies: () => api.get<StrategiesResponse>('/strategies'),
   executeMovingAverage: (params: MovingAverageParams) => api.post<StrategyResult>('/strategies/moving_average/execute', params),
   executeRSI: (params: RSIParams) => api.post<StrategyResult>('/strategies/rsi/execute', params),
+}
+
+// Instruments API
+export const instrumentsApi = {
+  getInstruments: (page: number, pageSize: number, search?: string) => {
+    const params: any = {
+      page,
+      page_size: pageSize
+    }
+    if (search) {
+      params.search = search
+    }
+    return api.get<InstrumentsResponse>('/instruments/all', { params })
+  }
 }
 
 // Health API
