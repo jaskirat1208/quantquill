@@ -3,6 +3,7 @@ from typing import Dict, Any
 from datetime import datetime
 
 from models.models import StrategyResult
+from alpha_server.models.strats import MovingAverageCrossoverStrat
 from core.route_registry import register_route
 from models import strats
 
@@ -13,7 +14,7 @@ class StrategyRouter:
 
         # Register routes with dependencies
         self.router.add_api_route("/", self.list_strategies, methods=["GET"])
-        self.router.add_api_route("/execute", self.execute_strategy, methods=["POST"])
+        self.router.add_api_route("/{strategy_name}/execute", self.execute_strategy, methods=["POST"])
     
     async def list_strategies(self, request: Request):
         """List all available strategies"""
@@ -30,9 +31,16 @@ class StrategyRouter:
             "message": "Strategy listing to be implemented"
         }
 
-    async def execute_strategy(self, strategy_data: Dict[str, Any], request: Request):
+    async def execute_strategy(self, strategy_name: str, strategy_data: Dict[str, Any], request: Request):
         """Execute a strategy with given parameters"""
         # TODO: Implement strategy execution logic
+        strat = MovingAverageCrossoverStrat(
+            strategy_data.get("symbols", ["99926001"]),
+            strategy_data.get("start_date", "2026-01-01 09:15"),
+            strategy_data.get("end_date", "2026-01-31 15:30"),
+            strategy_data.get("data_type", "ONE_MINUTE")
+        )
+        strat.start()
         return StrategyResult(
             strategy_name=strategy_data.get("strategy_name", "unknown"),
             symbol=strategy_data.get("symbol", "unknown"),
