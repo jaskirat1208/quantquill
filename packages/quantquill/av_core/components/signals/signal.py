@@ -66,7 +66,7 @@ class RiskSignal(Signal):
 class CompositeSignal(Signal):
     """Composite signal made of multiple signals."""
     signal_type: CompositeSignalType
-    signals: List[Signal]
+    signals: List[Signal] = field(default_factory=list)
 
 
 class SignalHandler:
