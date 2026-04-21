@@ -9,11 +9,9 @@ import pandas as pd
 from datetime import datetime
 from quantquill.av_core.components import PositionManager as pm
 from quantquill.types import Trade
+from quantquill.av_core.components.signals.types import TrendSignalType
+from quantquill.av_core.components.signals.signal import TrendSignal
 
-class Trend(Enum):
-    OTHER = 0
-    UP = 1
-    DOWN = 2
 
 class MovingAverageCrossoverStrategy(BaseStrategy):
     def __init__(self, *args):
@@ -24,9 +22,8 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
         self.long_alpha = 2.0 / (self.long_window + 1)
         self.short_ewma = 0
         self.long_ewma = 0
-        self.trend = Trend.OTHER
+        self.trend = TrendSignalType.SIDEWAYS
         self.ewma_history_df = []
-        self.trades_history = []  # Track all booked trades
         self.no_of_crossovers = 0
         self.first_time = True
 
@@ -43,27 +40,19 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
 
         self.short_ewma = self.short_alpha * quote.close_price + (1 - self.short_alpha) * self.short_ewma
         self.long_ewma = self.long_alpha * quote.close_price + (1 - self.long_alpha) * self.long_ewma
-        new_trend = Trend.OTHER
+        new_trend = TrendSignalType.SIDEWAYS
         
         if self.short_ewma > self.long_ewma:
-            new_trend = Trend.UP
+            new_trend = TrendSignalType.UP
         elif self.short_ewma < self.long_ewma:
-            new_trend = Trend.DOWN
+            new_trend = TrendSignalType.DOWN
         
         if new_trend != self.trend:
             self.logger.info(f"Trend changed from {self.trend} to {new_trend}")
             self.trend = new_trend
             self.no_of_crossovers += 1
-            if(new_trend == Trend.UP):
-                self.logger.info(f"Buy signal at price {quote.close_price}")
-                trade = Trade(token="99926001", quantity=1, price=quote.close_price, side="BUY", timestamp=quote.timestamp)
-                self.pf.book_trade(trade)
-                self.trades_history.append(trade)  # Track the trade
-            elif(new_trend == Trend.DOWN):
-                self.logger.info(f"Sell signal at price {quote.close_price}")
-                trade = Trade(token="99926001", quantity=1, price=quote.close_price, side="SELL", timestamp=quote.timestamp)
-                self.pf.book_trade(trade)
-                self.trades_history.append(trade)  # Track the trade
+            signal = self.create_signal(new_trend, quote)
+            
 
         self.ewma_history_df.append({
             'timestamp': datetime.fromisoformat(quote.timestamp),
@@ -71,64 +60,109 @@ class MovingAverageCrossoverStrategy(BaseStrategy):
             'long_ewma': self.long_ewma
         })
 
+    def create_signal(self, signal_type: TrendSignalType, quote: OHLCQuote):
+        signal = TrendSignal(
+            signal_type=signal_type,
+            timestamp=quote.timestamp,
+            price=quote.close_price,
+            symbol=quote.symbol,
+            metadata=quote.__dict__
+        )
+        self.process_signal(signal)
+        return signal
+
     def summary(self):
         ewma_history_df = pd.DataFrame(self.ewma_history_df)
-        fig = go.Figure()
-        
-        # Add EMA lines
-        fig.add_trace(go.Scatter(x=ewma_history_df['timestamp'], y=ewma_history_df['short_ewma'], mode='lines', name='Short EMA'))
-        fig.add_trace(go.Scatter(x=ewma_history_df['timestamp'], y=ewma_history_df['long_ewma'], mode='lines', name='Long EMA'))
-        
-        # Add trade markers
-        if self.trades_history:
-            trade_times = [datetime.fromisoformat(trade.timestamp) for trade in self.trades_history]
-            trade_prices = [trade.price for trade in self.trades_history]
-            trade_sides = ['BUY' if trade.side == 'BUY' else 'SELL' for trade in self.trades_history]
-            
-            # Buy trades (green triangles)
-            buy_times = [trade_times[i] for i, side in enumerate(trade_sides) if side == 'BUY']
-            buy_prices = [trade_prices[i] for i, side in enumerate(trade_sides) if side == 'BUY']
-            if buy_times:
-                fig.add_trace(go.Scatter(
-                    x=buy_times, 
-                    y=buy_prices, 
-                    mode='markers', 
-                    name='Buy Trades',
-                    marker=dict(symbol='triangle-up', size=10, color='green')
-                ))
-            
-            # Sell trades (red triangles)
-            sell_times = [trade_times[i] for i, side in enumerate(trade_sides) if side == 'SELL']
-            sell_prices = [trade_prices[i] for i, side in enumerate(trade_sides) if side == 'SELL']
-            if sell_times:
-                fig.add_trace(go.Scatter(
-                    x=sell_times, 
-                    y=sell_prices, 
-                    mode='markers', 
-                    name='Sell Trades',
-                    marker=dict(symbol='triangle-down', size=10, color='red')
-                ))
-        
-        fig.show()
 
         return {
+            "ewma_history": ewma_history_df,
             "short_ewma": self.short_ewma,
             "long_ewma": self.long_ewma,
             "trend": self.trend.value,
             "no_of_crossovers": self.no_of_crossovers,
-            "total_trades": len(self.trades_history),
-            "pnl": self.pf.get_position_manager().get_positions()
         }
 
 
+class PlatformSignalHandler(BackTestStrategyPlatform):
+    def __init__(self):
+        super().__init__()
+        self.trades_history = []
+
+    def handle_signal(self, signal):
+        new_trend = signal.signal_type
+        if(new_trend == TrendSignalType.UP):
+            self.logger.info(f"Buy signal at price {signal.price}")
+            trade = Trade(token="99926001", quantity=1, price=signal.price, side="BUY", timestamp=signal.timestamp)
+            self.book_trade(trade)
+            self.trades_history.append(trade)  # Track the trade
+        elif(new_trend == TrendSignalType.DOWN):
+            self.logger.info(f"Sell signal at price {signal.price}")
+            trade = Trade(token="99926001", quantity=1, price=signal.price, side="SELL", timestamp=signal.timestamp)
+            self.book_trade(trade)
+            self.trades_history.append(trade)  # Track the trade
+        
+    def summary(self):
+        return {
+            "total_trades": len(self.trades_history),
+            "pnl": self.get_position_manager().get_positions(),
+            "trades_history": self.trades_history
+        }
+
+
+def visualize(pf_summary, strat_summary):
+    ewma_history_df = strat_summary['ewma_history']
+    trades_history = pf_summary['trades_history']
+    fig = go.Figure()
+    
+    # Add EMA lines
+    fig.add_trace(go.Scatter(x=ewma_history_df['timestamp'], y=ewma_history_df['short_ewma'], mode='lines', name='Short EMA'))
+    fig.add_trace(go.Scatter(x=ewma_history_df['timestamp'], y=ewma_history_df['long_ewma'], mode='lines', name='Long EMA'))
+    
+    # Add trade markers
+    if trades_history:
+        trade_times = [datetime.fromisoformat(trade.timestamp) for trade in trades_history]
+        trade_prices = [trade.price for trade in trades_history]
+        trade_sides = ['BUY' if trade.side == 'BUY' else 'SELL' for trade in trades_history]
+        
+        # Buy trades (green triangles)
+        buy_times = [trade_times[i] for i, side in enumerate(trade_sides) if side == 'BUY']
+        buy_prices = [trade_prices[i] for i, side in enumerate(trade_sides) if side == 'BUY']
+        if buy_times:
+            fig.add_trace(go.Scatter(
+                x=buy_times, 
+                y=buy_prices, 
+                mode='markers', 
+                name='Buy Trades',
+                marker=dict(symbol='triangle-up', size=10, color='green')
+            ))
+        
+        # Sell trades (red triangles)
+        sell_times = [trade_times[i] for i, side in enumerate(trade_sides) if side == 'SELL']
+        sell_prices = [trade_prices[i] for i, side in enumerate(trade_sides) if side == 'SELL']
+        if sell_times:
+            fig.add_trace(go.Scatter(
+                x=sell_times, 
+                y=sell_prices, 
+                mode='markers', 
+                name='Sell Trades',
+                marker=dict(symbol='triangle-down', size=10, color='red')
+            ))
+    
+    fig.show()
+
+
+
 if __name__ == "__main__":
-    pf = BackTestStrategyPlatform()
+    pf = PlatformSignalHandler()
     client = pf.get_client()
     instrument = client.getInstrumentBySymbol("BAJFINANCE")
-    pf.set_backtest_data_params(["99926001"], "2024-09-06 11:15", "2026-02-28 12:00", "ONE_MINUTE")
+    pf.set_backtest_data_params(["99926001"], "2024-09-06 11:15", "2024-10-28 12:00", "ONE_MINUTE")
     strategy = MovingAverageCrossoverStrategy()
     strategy.set_logger(pf.get_logger())
-    strategy.set_platform(pf)
+    strategy.set_signal_handler(pf)
     pf.add_strat(strategy)
     pf.start()
-    print(strategy.summary())
+    strat_summary = strategy.summary()
+    pf_summary = pf.summary()
+    visualize(pf_summary, strat_summary)
+    # print(strategy.summary())
