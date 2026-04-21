@@ -62,11 +62,11 @@ class RiskSignal(Signal):
     signal_type: RiskSignalType
 
 
-# @dataclass
-# class CompositeSignal(Signal):
-#     """Composite signal made of multiple signals."""
-#     signal_type: CompositeSignalType
-#     signals: List[Signal]
+@dataclass
+class CompositeSignal(Signal):
+    """Composite signal made of multiple signals."""
+    signal_type: CompositeSignalType
+    signals: List[Signal]
 
 
 class SignalHandler:

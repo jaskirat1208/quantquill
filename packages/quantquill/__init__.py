@@ -13,7 +13,8 @@ __author__ = "jaskirat1208"
 __email__ = "jaskirat@example.com"
 
 # Core imports
-from quantquill.strats import BaseStrategy, OHLCQuote
+from quantquill.types import OHLCQuote, Trade
+from quantquill.strats import BaseStrategy
 from quantquill.data.angel_one.platform import BackTestStrategyPlatform
 
 # Strategy imports
@@ -25,8 +26,9 @@ from quantquill.av_core.logger import LoggerConfig
 
 __all__ = [
     # Core classes
-    "BaseStrategy",
-    "OHLCQuote", 
+    "OHLCQuote",
+    "Trade",
+    "BaseStrategy", 
     "BackTestStrategyPlatform",
     
     # Strategies
