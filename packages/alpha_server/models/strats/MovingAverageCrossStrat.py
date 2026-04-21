@@ -1,29 +1,28 @@
 
 
-from quantquill.strats import BaseStrategy
-from quantquill.data.angel_one import platform as pf
-
-class MovingAverageCrossStrat(BaseStrategy):
-    def __init__(self):
-        pass
+from quantquill.data.angel_one.platform import BackTestStrategyPlatform
+from quantquill.strats import MovingAverageCrossoverStrategy
+from quantquill.av_core.components.signals import SignalHandler
 
 
-class BackTestStratSimulator:
-    def __init__(self, strategy: BaseStrategy):
-        self.platform = pf.BackTestStrategyPlatform()
-        client = self.platform.get_client()
-        instrument = client.getInstrumentBySymbol("BAJFINANCE")
-        self.strategy = strategy
+class MovingAverageCrossoverStrat(SignalHandler):
+    def __init__(self, symbols, start_date, end_date, data_type):
+        self.platform = BackTestStrategyPlatform()
+        self.platform.set_backtest_data_params(symbols, start_date, end_date, data_type)
+        self.strategy = MovingAverageCrossoverStrategy()
         self.strategy.set_logger(self.platform.get_logger())
-        self.strategy.set_platform(self.platform)
-        self.platform.add_strat(strategy)
+        self.strategy.set_signal_handler(self)
+        self.platform.add_strat(self.strategy)
 
+    def handle_signal(self, signal):
+        # TODO: Implement execution logic
+        print("Signal received:", signal)
 
-    def set_params(self, params):
-        self.platform.set_backtest_data_params(params["instruments"], params["start_time"], params["end_time"], params["timeframe"])
-
-
-    def simulate(self):
+    def start(self):
         self.platform.start()
-        results = self.strategy.summary()
-        return results
+        print("Strategy execution completed")
+
+
+if(__name__ == "__main__"):
+    strat = MovingAverageCrossoverStrat(["99926001"], "2026-01-01 09:15", "2026-01-31 15:30", "ONE_MINUTE")
+    strat.start()
