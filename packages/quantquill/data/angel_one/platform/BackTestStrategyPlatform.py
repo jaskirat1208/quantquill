@@ -89,7 +89,11 @@ class BackTestStrategyPlatform(AngelOneSmartApp):
     def get_position_manager(self):
         return self.position_manager
 
+    def set_total_capital(self, capital: float):
+        self.position_manager.set_total_capital(capital)
+
 if(__name__ == "__main__"):
     app = BackTestStrategyPlatform()
     app.set_backtest_data_params(["99926000", "99926001"], "2025-09-06 11:15", "2026-02-28 12:00", "ONE_MINUTE")
+    app.set_total_capital(100000)
     app.start()

@@ -2,12 +2,11 @@ from fastapi import APIRouter, Depends, Request
 from typing import Dict, Any
 from datetime import datetime
 
-from models.pydantic_models import MovingAverageStrategy, RSIStrategy, StrategyResult
+from models.models import StrategyResult
+from alpha_server.models.strats import MovingAverageCrossoverStrat
 from core.route_registry import register_route
-
-def get_strategy_executor(request: Request):
-    """Dependency to get strategy executor from app state"""
-    return request.app.state.strategy_executor
+from models import strats
+from alpha_server.models.strats.DummyStrat import DummyStrat
 
 @register_route(prefix="/strategies", tags=["strategies"])
 class StrategyRouter:
@@ -16,38 +15,32 @@ class StrategyRouter:
 
         # Register routes with dependencies
         self.router.add_api_route("/", self.list_strategies, methods=["GET"])
-        self.router.add_api_route("/moving_average/execute", self.execute_moving_average, methods=["POST"])
-        self.router.add_api_route("/rsi/execute", self.execute_rsi_strategy, methods=["POST"])
+        self.router.add_api_route("/{strategy_name}/execute", self.execute_strategy, methods=["POST"])
     
     async def list_strategies(self, request: Request):
-        """List all available strategies from quantquill library"""
-        executor = get_strategy_executor(request)
-        return executor.list_strategies()
+        """List all available strategies"""
+        # Get strategy classes from the strats module
+        available_strategies = []
+        for attr_name in dir(strats):
+            attr = getattr(strats, attr_name)
+            if isinstance(attr, type) and hasattr(attr, '__name__'):
+                available_strategies.append(attr.__name__)
+        
+        print(f"Available strategies: {available_strategies}")
+        return {
+            "strategies": available_strategies,
+            "message": "Strategy listing to be implemented"
+        }
 
-    async def execute_moving_average(self, strategy: MovingAverageStrategy, request: Request):
-        """Execute moving average strategy with validated parameters"""
-        executor = get_strategy_executor(request)
-        result = executor.execute_strategy("moving_average", strategy.dict())
-        return StrategyResult(
-            strategy_name="moving_average",
-            symbol=strategy.symbol,
-            executed_at=datetime.now(),
-            parameters=strategy.dict(),
-            success=result["success"],
-            message=result.get("message"),
-            trades=result.get("trades")
+    async def execute_strategy(self, strategy_name: str, strategy_data: Dict[str, Any], request: Request):
+        """Execute a strategy with given parameters"""
+        strat = DummyStrat(
+            strategy_data.get("symbols", ["99926001"]),
+            strategy_data.get("start_date", "2026-01-01 09:15"),
+            strategy_data.get("end_date", "2026-01-31 15:30"),
+            strategy_data.get("data_type", "ONE_MINUTE")
         )
-
-    async def execute_rsi_strategy(self, strategy: RSIStrategy, request: Request):
-        """Execute RSI strategy with validated parameters"""
-        executor = get_strategy_executor(request)
-        result = executor.execute_strategy("rsi", strategy.dict())
-        return StrategyResult(
-            strategy_name="rsi",
-            symbol=strategy.symbol,
-            executed_at=datetime.now(),
-            parameters=strategy.dict(),
-            success=result["success"],
-            message=result.get("message"),
-            trades=result.get("trades")
-        )
+        
+        # Get strategy results
+        strat.start()
+        return strat.result()
