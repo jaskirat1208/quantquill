@@ -113,7 +113,7 @@ const StrategyPanel: React.FC<StrategyPanelProps> = ({ onResults }) => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Position Size ($)"
+              label="Position Size (₹)"
               type="number"
               value={maParams.position_size}
               onChange={(e) => setMaParams({...maParams, position_size: parseFloat(e.target.value)})}
@@ -167,7 +167,7 @@ const StrategyPanel: React.FC<StrategyPanelProps> = ({ onResults }) => {
           <Grid item xs={12}>
             <TextField
               fullWidth
-              label="Position Size ($)"
+              label="Position Size (₹)"
               type="number"
               value={rsiParams.position_size}
               onChange={(e) => setRsiParams({...rsiParams, position_size: parseFloat(e.target.value)})}

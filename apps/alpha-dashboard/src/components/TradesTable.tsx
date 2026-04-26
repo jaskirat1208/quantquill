@@ -9,7 +9,7 @@ import type { TradesTableProps, Trade } from '../types'
 const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
   const columnDefs = useMemo(() => [
     {
-      field: 'time',
+      field: 'timestamp',
       headerName: 'Time',
       sortable: true,
       filter: true,
@@ -19,7 +19,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       }
     },
     {
-      field: 'action',
+      field: 'side',
       headerName: 'Action',
       sortable: true,
       filter: true,
@@ -42,7 +42,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       filter: 'agNumberColumnFilter',
       valueFormatter: (params: { value: number }) => {
         if (params.value == null) return '-'
-        return `$${params.value.toFixed(2)}`
+        return `₹${params.value.toFixed(2)}`
       }
     },
     {
@@ -56,6 +56,12 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       }
     },
     {
+      field: 'token',
+      headerName: 'Symbol',
+      sortable: true,
+      filter: true
+    },
+    {
       headerName: 'Total Value',
       sortable: true,
       filter: 'agNumberColumnFilter',
@@ -66,7 +72,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       },
       valueFormatter: (params: { value: number }) => {
         if (params.value == null) return '-'
-        return `$${params.value.toFixed(2)}`
+        return `₹${params.value.toFixed(2)}`
       }
     }
   ], [])

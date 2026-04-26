@@ -6,6 +6,7 @@ from models.models import StrategyResult
 from alpha_server.models.strats import MovingAverageCrossoverStrat
 from core.route_registry import register_route
 from models import strats
+from alpha_server.models.strats.DummyStrat import DummyStrat
 
 @register_route(prefix="/strategies", tags=["strategies"])
 class StrategyRouter:
@@ -33,18 +34,13 @@ class StrategyRouter:
 
     async def execute_strategy(self, strategy_name: str, strategy_data: Dict[str, Any], request: Request):
         """Execute a strategy with given parameters"""
-        # TODO: Implement strategy execution logic
-        strat = MovingAverageCrossoverStrat(
+        strat = DummyStrat(
             strategy_data.get("symbols", ["99926001"]),
             strategy_data.get("start_date", "2026-01-01 09:15"),
             strategy_data.get("end_date", "2026-01-31 15:30"),
             strategy_data.get("data_type", "ONE_MINUTE")
         )
+        
+        # Get strategy results
         strat.start()
-        return StrategyResult(
-            strategy_name=strategy_data.get("strategy_name", "unknown"),
-            symbol=strategy_data.get("symbol", "unknown"),
-            parameters=strategy_data,
-            success=False,
-            message="Strategy execution to be implemented"
-        )
+        return strat.result()

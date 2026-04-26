@@ -3,7 +3,7 @@ import { Paper, Typography, Grid, Box } from '@mui/material'
 import { TrendingUp } from '@mui/icons-material'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
-import type { ChartPanelProps } from '../types'
+import type { ChartPanelProps, PortfolioSnapshot } from '../types'
 
 const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
   if (!strategyResults) {
@@ -22,17 +22,19 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
     )
   }
 
-  const { trades, strategy_name, profit_loss } = strategyResults
-
-  const tradeData = trades?.map((trade) => trade.price) || []
+  const { trades, strategy_name, profit_loss, portfolio_snapshots } = strategyResults
   
-  const pnlData = trades?.map((_, index) => {
-    const runningTrades = trades.slice(0, index + 1)
-    const runningPnL = runningTrades.reduce((sum, trade) => {
-      return sum + (trade.action === 'SELL' ? trade.price * trade.quantity : -trade.price * trade.quantity)
-    }, 0)
-    return [index, runningPnL]
-  }) || []
+  // Use portfolio snapshots from backend for P&L data
+  const pnlDataWithTime = portfolio_snapshots?.map((snapshot: PortfolioSnapshot) => [
+    new Date(snapshot.timestamp).getTime(),
+    snapshot.pnl
+  ]) || []
+
+  // For backward compatibility - trade number based P&L from backend data
+  const pnlData = portfolio_snapshots?.map((snapshot: PortfolioSnapshot, index: number) => [
+    index,
+    snapshot.pnl
+  ]) || []
 
   const chartOptions: Highcharts.Options = {
     chart: {
@@ -57,7 +59,7 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
       tickColor: '#4b5563'
     },
     yAxis: {
-      title: { text: 'Price ($)', style: { color: '#9ca3af' } },
+      title: { text: 'P&L (₹)', style: { color: '#9ca3af' } },
       labels: { style: { color: '#9ca3af' } },
       lineColor: '#4b5563',
       tickColor: '#4b5563',
@@ -69,20 +71,14 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
     },
     series: [
       {
-        name: 'Trade Price',
-        data: tradeData,
-        color: '#0ea5e9',
+        name: 'Running P&L',
+        data: pnlData,
+        color: (profit_loss || 0) >= 0 ? '#10b981' : '#ef4444',
+        lineWidth: 3,
         marker: {
           enabled: true,
           radius: 4
         },
-        type: 'line'
-      },
-      {
-        name: 'Running P&L',
-        data: pnlData,
-        color: (profit_loss || 0) >= 0 ? '#10b981' : '#ef4444',
-        dashStyle: 'Dash',
         type: 'line'
       }
     ],
@@ -112,7 +108,7 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
       labels: { style: { color: '#9ca3af' } }
     },
     yAxis: {
-      title: { text: 'P&L ($)', style: { color: '#9ca3af' } },
+      title: { text: 'P&L (₹)', style: { color: '#9ca3af' } },
       labels: { style: { color: '#9ca3af' } },
       gridLineColor: '#374151'
     },
@@ -123,7 +119,7 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
     },
     series: [{
       name: 'P&L',
-      data: pnlData.map(d => d[1]),
+      data: pnlData.map((d: number[]) => d[1]),
       showInLegend: false,
       type: 'column'
     }],
@@ -131,6 +127,98 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
       backgroundColor: '#1e293b',
       borderColor: '#4b5563',
       style: { color: '#fff' }
+    }
+  }
+
+  // P&L vs Time Chart
+  const pnlTimeChartOptions: Highcharts.Options = {
+    chart: {
+      type: 'line',
+      backgroundColor: 'transparent'
+    },
+    title: {
+      text: 'P&L Over Time',
+      style: { color: '#fff', fontSize: '14px' }
+    },
+    xAxis: {
+      type: 'datetime',
+      title: { text: 'Date & Time', style: { color: '#9ca3af' } },
+      labels: { 
+        style: { color: '#9ca3af' },
+        formatter: function() {
+          const date = new Date(this.value);
+          // Convert to IST (UTC+5:30)
+          const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+          const istDate = new Date(date.getTime() + istOffset + (date.getTimezoneOffset() * 60 * 1000));
+          
+          const year = istDate.getFullYear();
+          const month = (istDate.getMonth() + 1).toString().padStart(2, '0');
+          const day = istDate.getDate().toString().padStart(2, '0');
+          const hours = istDate.getHours().toString().padStart(2, '0');
+          const minutes = istDate.getMinutes().toString().padStart(2, '0');
+          
+          // Show year only if it's not the current year or if it's Jan 1st
+          const currentYear = new Date().getFullYear();
+          const showYear = year !== currentYear || (month === '01' && day === '01');
+          
+          if (showYear) {
+            return `${year}/${month}/${day}<br/>${hours}:${minutes}`;
+          } else {
+            return `${month}/${day}<br/>${hours}:${minutes}`;
+          }
+        },
+        useHTML: true
+      },
+      lineColor: '#4b5563',
+      tickColor: '#4b5563'
+    },
+    yAxis: {
+      title: { text: 'Cumulative P&L (₹)', style: { color: '#9ca3af' } },
+      labels: { style: { color: '#9ca3af' } },
+      lineColor: '#4b5563',
+      tickColor: '#4b5563',
+      gridLineColor: '#374151'
+    },
+    legend: {
+      itemStyle: { color: '#9ca3af' },
+      itemHoverStyle: { color: '#fff' }
+    },
+    series: [{
+      name: 'Cumulative P&L',
+      data: pnlDataWithTime,
+      color: (profit_loss || 0) >= 0 ? '#10b981' : '#ef4444',
+      lineWidth: 3,
+      marker: {
+        enabled: true,
+        radius: 4
+      },
+      type: 'line'
+    }],
+    plotOptions: {
+      line: {
+        lineWidth: 2
+      }
+    },
+    tooltip: {
+      backgroundColor: '#1e293b',
+      borderColor: '#4b5563',
+      style: { color: '#fff' },
+      pointFormatter: function() {
+        const date = new Date((this as any).x);
+        // Convert to IST (UTC+5:30)
+        const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+        const istDate = new Date(date.getTime() + istOffset + (date.getTimezoneOffset() * 60 * 1000));
+        
+        const year = istDate.getFullYear();
+        const month = (istDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = istDate.getDate().toString().padStart(2, '0');
+        const hours = istDate.getHours().toString().padStart(2, '0');
+        const minutes = istDate.getMinutes().toString().padStart(2, '0');
+        const seconds = istDate.getSeconds().toString().padStart(2, '0');
+        
+        return `<span style="color: ${(this as any).color}">●</span> ${this.series.name}: <b>₹${(this as any).y.toFixed(2)}</b><br/>
+                <span style="color: #9ca3af">Time: ${year}-${month}-${day} ${hours}:${minutes}:${seconds} IST</span>`
+      }
     }
   }
 
@@ -152,7 +240,7 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'background.default' }}>
             <Typography variant="body2" color="text.secondary">Net P&L</Typography>
             <Typography variant="h5" fontWeight="bold" color={(profit_loss || 0) >= 0 ? 'success.main' : 'error.main'}>
-              ${profit_loss?.toFixed(2) || '0.00'}
+              ₹{profit_loss?.toFixed(2) || '0.00'}
             </Typography>
           </Paper>
         </Grid>
@@ -160,7 +248,7 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'background.default' }}>
             <Typography variant="body2" color="text.secondary">Avg per Trade</Typography>
             <Typography variant="h5" fontWeight="bold">
-              ${trades?.length ? ((profit_loss || 0) / trades.length).toFixed(2) : '0.00'}
+              ₹{trades?.length ? ((profit_loss || 0) / trades.length).toFixed(2) : '0.00'}
             </Typography>
           </Paper>
         </Grid>
@@ -169,6 +257,9 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
       <HighchartsReact highcharts={Highcharts} options={chartOptions} />
       <Box sx={{ mt: 2 }}>
         <HighchartsReact highcharts={Highcharts} options={pnlChartOptions} />
+      </Box>
+      <Box sx={{ mt: 2 }}>
+        <HighchartsReact highcharts={Highcharts} options={pnlTimeChartOptions} />
       </Box>
     </Paper>
   )
