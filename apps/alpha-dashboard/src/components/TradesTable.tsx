@@ -9,7 +9,7 @@ import type { TradesTableProps, Trade } from '../types'
 const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
   const columnDefs = useMemo(() => [
     {
-      field: 'time',
+      field: 'timestamp',
       headerName: 'Time',
       sortable: true,
       filter: true,
@@ -19,7 +19,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       }
     },
     {
-      field: 'action',
+      field: 'side',
       headerName: 'Action',
       sortable: true,
       filter: true,
@@ -42,7 +42,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       filter: 'agNumberColumnFilter',
       valueFormatter: (params: { value: number }) => {
         if (params.value == null) return '-'
-        return `$${params.value.toFixed(2)}`
+        return `₹${params.value.toFixed(2)}`
       }
     },
     {
@@ -56,6 +56,13 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       }
     },
     {
+      field: 'token',
+      headerName: 'Symbol',
+      sortable: true,
+      filter: true
+    },
+    {
+      colId: 'totalValue',
       headerName: 'Total Value',
       sortable: true,
       filter: 'agNumberColumnFilter',
@@ -66,7 +73,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       },
       valueFormatter: (params: { value: number }) => {
         if (params.value == null) return '-'
-        return `$${params.value.toFixed(2)}`
+        return `₹${params.value.toFixed(2)}`
       }
     }
   ], [])
@@ -80,10 +87,11 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
   const exportToCSV = () => {
     if (!trades || trades.length === 0) return
     
-    const headers = ['Time', 'Action', 'Price', 'Quantity', 'Total Value']
+    const headers = ['Time', 'Action', 'Symbol', 'Price', 'Quantity', 'Total Value']
     const rows = trades.map(trade => [
-      new Date(trade.time).toLocaleString(),
-      trade.action,
+      new Date(trade.timestamp).toLocaleString(),
+      trade.side,
+      trade.token,
       trade.price.toFixed(2),
       trade.quantity.toFixed(4),
       (trade.price * trade.quantity).toFixed(2)
@@ -145,7 +153,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
         >
           <AgGridReact
             rowData={trades}
-            columnDefs={columnDefs}
+            columnDefs={columnDefs as any}
             defaultColDef={defaultColDef}
             gridOptions={gridOptions}
             animateRows={true}

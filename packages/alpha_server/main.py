@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 import uvicorn
 
 # Import strategy executor (relative imports for running from alpha_server directory)
-from models.models import StrategyExecutor
 from core.route_registry import registry
 import sys
 print(f"Python path: {sys.path}")
@@ -16,7 +15,6 @@ import routers
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup: Initialize your quantquill library
-    app.state.strategy_executor = StrategyExecutor()
     print("Alpha Server started - QuantQuill library initialized")
     yield
     # Shutdown: Cleanup resources

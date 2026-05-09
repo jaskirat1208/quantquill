@@ -1,9 +1,20 @@
 // API Types
 export interface Trade {
-  action: 'BUY' | 'SELL'
+  side: 'BUY' | 'SELL'
   price: number
   quantity: number
-  time: string
+  timestamp: string
+  token: string
+}
+
+export interface PortfolioSnapshot {
+  timestamp: string
+  price: number
+  cash: number
+  positions: Record<string, number>
+  position_value: number
+  total_value: number
+  pnl: number
 }
 
 export interface StrategyResult {
@@ -15,6 +26,12 @@ export interface StrategyResult {
   message?: string
   trades: Trade[]
   profit_loss?: number
+  max_drawdown?: number
+  volatility?: number
+  sharpe_ratio?: number
+  win_rate?: number
+  total_return?: number
+  portfolio_snapshots?: PortfolioSnapshot[]
 }
 
 export interface StrategyInfo {

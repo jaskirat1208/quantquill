@@ -9,6 +9,7 @@ import {
 import { ThemeProvider, createTheme } from '@mui/material/styles'
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
+import LandingPage from './pages/LandingPage'
 import DashboardPage from './pages/DashboardPage'
 import InstrumentsPage from './pages/InstrumentsPage'
 
@@ -35,11 +36,10 @@ const AppContent: React.FC = () => {
 
   // Map URL paths to active tabs
   const getActiveTabFromPath = (path: string): string => {
+    if (path === '/') return 'home'
+    if (path.startsWith('/nse-ab-backtester')) return 'nse-ab-backtester'
     if (path.startsWith('/instruments')) return 'instruments'
-    if (path.startsWith('/execute')) return 'execute'
-    if (path.startsWith('/results')) return 'results'
-    if (path.startsWith('/settings')) return 'settings'
-    return 'dashboard'
+    return 'home'
   }
 
   const [activeTab, setActiveTab] = useState<string>(getActiveTabFromPath(location.pathname))
@@ -53,17 +53,14 @@ const AppContent: React.FC = () => {
     setActiveTab(tabId)
     // Navigate to corresponding URL
     switch (tabId) {
+      case 'home':
+        navigate('/')
+        break
+      case 'nse-ab-backtester':
+        navigate('/nse-ab-backtester')
+        break
       case 'instruments':
         navigate('/instruments')
-        break
-      case 'execute':
-        navigate('/execute')
-        break
-      case 'results':
-        navigate('/results')
-        break
-      case 'settings':
-        navigate('/settings')
         break
       default:
         navigate('/')
@@ -89,11 +86,9 @@ const AppContent: React.FC = () => {
 
         {/* Route-based content */}
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/nse-ab-backtester" element={<DashboardPage />} />
           <Route path="/instruments" element={<InstrumentsPage />} />
-          <Route path="/execute" element={<DashboardPage />} />
-          <Route path="/results" element={<DashboardPage />} />
-          <Route path="/settings" element={<DashboardPage />} />
         </Routes>
       </Box>
     </Box>

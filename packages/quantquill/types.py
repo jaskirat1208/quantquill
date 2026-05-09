@@ -39,3 +39,15 @@ class Trade:
     def __post_init__(self):
         if isinstance(self.timestamp, datetime):
             self.timestamp = self.timestamp.isoformat()
+        if isinstance(self.timestamp, str) and not self._is_timestamp_in_iso_format(self.timestamp):
+            raise ValueError("Timestamp must be in ISO 8601 format")
+
+    @staticmethod
+    def _is_timestamp_in_iso_format(timestamp_str):
+        try:
+            datetime.fromisoformat(timestamp_str)
+            return True
+        except ValueError:
+            return False
+            
+

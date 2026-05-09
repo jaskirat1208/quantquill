@@ -11,21 +11,17 @@ import {
   Divider
 } from '@mui/material'
 import {
-  Dashboard as DashboardIcon,
-  PlayArrow as PlayIcon,
-  Assessment as AssessmentIcon,
-  Settings as SettingsIcon,
+  Home as HomeIcon,
+  TrendingUp as BacktesterIcon,
   Help as HelpIcon,
   TableChart as TableIcon
 } from '@mui/icons-material'
 import type { SidebarProps } from '../types'
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { id: 'execute', label: 'Execute Strategy', icon: PlayIcon },
-  { id: 'results', label: 'Results', icon: AssessmentIcon },
+  { id: 'home', label: 'Home', icon: HomeIcon },
+  { id: 'nse-ab-backtester', label: 'NSE AB Backtester', icon: BacktesterIcon },
   { id: 'instruments', label: 'Instruments', icon: TableIcon },
-  { id: 'settings', label: 'Settings', icon: SettingsIcon },
 ]
 
 const drawerWidth = 240
