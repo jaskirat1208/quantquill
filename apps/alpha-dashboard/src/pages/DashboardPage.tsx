@@ -21,7 +21,7 @@ const DashboardPage: React.FC = () => {
   return (
     <Box sx={{ width: '100%' }}>
       <Typography variant="h4" fontWeight="bold" sx={{ mb: 3 }}>
-        Dashboard
+        NSE AB Backtester
       </Typography>
       
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>

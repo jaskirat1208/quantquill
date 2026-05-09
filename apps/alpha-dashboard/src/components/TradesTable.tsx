@@ -62,6 +62,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
       filter: true
     },
     {
+      colId: 'totalValue',
       headerName: 'Total Value',
       sortable: true,
       filter: 'agNumberColumnFilter',
@@ -86,10 +87,11 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
   const exportToCSV = () => {
     if (!trades || trades.length === 0) return
     
-    const headers = ['Time', 'Action', 'Price', 'Quantity', 'Total Value']
+    const headers = ['Time', 'Action', 'Symbol', 'Price', 'Quantity', 'Total Value']
     const rows = trades.map(trade => [
-      new Date(trade.time).toLocaleString(),
-      trade.action,
+      new Date(trade.timestamp).toLocaleString(),
+      trade.side,
+      trade.token,
       trade.price.toFixed(2),
       trade.quantity.toFixed(4),
       (trade.price * trade.quantity).toFixed(2)
@@ -151,7 +153,7 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
         >
           <AgGridReact
             rowData={trades}
-            columnDefs={columnDefs}
+            columnDefs={columnDefs as any}
             defaultColDef={defaultColDef}
             gridOptions={gridOptions}
             animateRows={true}
