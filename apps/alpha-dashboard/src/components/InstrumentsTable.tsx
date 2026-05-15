@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { instrumentsApi } from '../services/api';
-import type { Instrument, InstrumentsResponse } from '../types';
+import type { Instrument } from '../types';
 
 interface SearchFilters {
   search: string;

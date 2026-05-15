@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from core.route_registry import register_route
+from alpha_server.core.route_registry import register_route
 
 @register_route(prefix="/example", tags=["example"])
 class ExampleRouter:

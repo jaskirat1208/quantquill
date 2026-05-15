@@ -3,72 +3,52 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "quantquill"
+name = "quant-quill"
 version = "0.1.0"
-description = "A comprehensive quantitative trading framework with strategy backtesting and execution capabilities"
+description = "Quantitative trading strategy platform"
 readme = "README.md"
-license = {text = "MIT"}
-authors = [
-    {name = "jaskirat1208", email = "jaskirat@example.com"}
-]
-maintainers = [
-    {name = "jaskirat1208", email = "jaskirat@example.com"}
-]
-keywords = ["trading", "quantitative", "backtesting", "strategies", "finance"]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Intended Audience :: Financial and Insurance Industry",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Office/Business :: Financial :: Investment",
-    "Topic :: Software Development :: Libraries :: Python Modules"
-]
 requires-python = ">=3.8"
+license = "MIT"
+authors = [
+    {name = "Jaskirat Singh", email = "jaskirat@example.com"},
+]
+keywords = ["trading", "quantitative", "finance", "algorithms"]
 dependencies = [
-    "smartapi-python>=1.5.5",
+    "smartapi-python==1.5.5",
     "plotly>=6.6.0",
     "pandas>=2.3.0",
+    "logzero>=1.7.0",
+    "pyotp>=2.9.0",
+    "websocket>=0.2.1",
 ]
 
 [project.optional-dependencies]
-docs = [
-    "sphinx>=5.0.0",
-    "sphinx-rtd-theme>=1.0.0",
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=22.0",
+    "flake8>=5.0",
+    "mypy>=1.0",
 ]
+
+[project.scripts]
+quantquill-server = "alpha_server.start_alpha_server:main"
 
 [project.urls]
 Homepage = "https://github.com/jaskirat1208/quantquill"
-Documentation = "https://quantquill.readthedocs.io/"
-Repository = "https://github.com/jaskirat1208/quantquill.git"
-"Bug Tracker" = "https://github.com/jaskirat1208/quantquill/issues"
-
-[project.scripts]
-quantquill = "quantquill.cli:main"
-
-[tool.setuptools]
-package-dir = {"" = "packages"}
+Repository = "https://github.com/jaskirat1208/quantquill"
+Issues = "https://github.com/jaskirat1208/quantquill/issues"
 
 [tool.setuptools.packages.find]
 where = ["packages"]
-include = ["quantquill*", "alpha_server*"]
-exclude = ["test*"]
+include = ["*"]
 
-[tool.setuptools.package-data]
-quantquill = ["*.json", "*.yaml", "*.yml", "*.txt"]
-
+[tool.black]
+line-length = 88
+target-version = ['py38']
 
 [tool.pytest.ini_options]
 testpaths = ["test"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-
-[tool.mypy]
-python_version = "3.8"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true

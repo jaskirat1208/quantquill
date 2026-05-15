@@ -1,8 +1,8 @@
 
 
 from fastapi import APIRouter, Query
-from models.etc.instruments import get_instruments
-from core.route_registry import register_route
+from alpha_server.models.etc.instruments import get_instruments
+from alpha_server.core.route_registry import register_route
 from typing import Optional, List
 
 @register_route(prefix="/instruments", tags=["instruments"])
