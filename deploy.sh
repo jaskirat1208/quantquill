@@ -14,7 +14,7 @@ if [ -L "$REPO_NAME" ]; then
     CURRENT_VERSION=$(readlink "$REPO_NAME")
     if [ -d "$CURRENT_VERSION" ]; then
         cd "$CURRENT_VERSION"
-        sudo docker compose down
+        docker compose down
         cd ..
     fi
 fi
