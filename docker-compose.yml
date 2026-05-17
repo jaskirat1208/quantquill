@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
     container_name: quantquill-frontend
     ports:
-      - "80:80"
+      - "8090:80"
     depends_on:
       - api
     restart: unless-stopped
