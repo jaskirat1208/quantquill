@@ -124,6 +124,25 @@ black quantquill/
 mypy quantquill/
 ```
 
+## Deployment
+
+### Manual Deployment
+
+To deploy the application:
+
+```bash
+cd /opt/jazz/apps/quantquill
+docker compose down
+```
+
+From the development folder, run `./deploy.sh` from root. The script takes a version tag as input (e.g., `quantquill-1.0`):
+
+```bash
+./deploy.sh quantquill-1.0
+```
+
+**Note**: There are plans to move deploy.sh into GitHub Actions, but this hasn't been implemented yet.
+
 ## Contributing
 
 1. Fork the repository
