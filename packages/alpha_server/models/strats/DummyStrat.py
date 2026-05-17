@@ -8,7 +8,7 @@ from quantquill.types import Trade
 from quantquill.data.angel_one.platform import BackTestStrategyPlatform
 from quantquill.strats import MovingAverageCrossoverStrategy
 from quantquill.av_core.components.signals import SignalHandler
-from models.models import StrategyResult
+from alpha_server.models.models import StrategyResult
 
 from datetime import datetime, timedelta
 from typing import Optional, Any

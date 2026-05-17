@@ -4,13 +4,13 @@ from contextlib import asynccontextmanager
 import uvicorn
 
 # Import strategy executor (relative imports for running from alpha_server directory)
-from core.route_registry import registry
+from alpha_server.core.route_registry import registry
 import sys
 print(f"Python path: {sys.path}")
 print(f"Working dir: {__import__('os').getcwd()}")
 
 # Import routers to trigger auto-registration
-import routers
+from alpha_server import routers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,7 +30,7 @@ app = FastAPI(
 # CORS middleware for React UI
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001"],  # React dev server
+    allow_origins=["http://localhost:3001", "http://thinkcentre-m73:3001", "http://localhost", "http://frontend"],  # React dev server and Docker
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,10 +55,14 @@ for route in app.routes:
 async def root():
     return {"message": "Alpha Server - QuantQuill API", "status": "running", "docs": "/docs"}
 
-if __name__ == "__main__":
+
+def start_alpha_server(port=8091, reload=False):
     uvicorn.run(
-        "main:app",
+        app,
         host="0.0.0.0",
-        port=8091,
-        reload=True
+        port=port,
+        reload=reload
     )
+
+if __name__ == "__main__":
+    start_alpha_server(reload=True)

@@ -4,7 +4,6 @@ import type {
   StrategiesResponse,
   MovingAverageParams,
   RSIParams,
-  Instrument,
   InstrumentsResponse,
 } from '../types';
 

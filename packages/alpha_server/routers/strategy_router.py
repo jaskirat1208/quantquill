@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, Request
 from typing import Dict, Any
 from datetime import datetime
 
-from models.models import StrategyResult
+from alpha_server.models.models import StrategyResult
 from alpha_server.models.strats import MovingAverageCrossoverStrat
-from core.route_registry import register_route
-from models import strats
+from alpha_server.core.route_registry import register_route
+from alpha_server.models import strats
 from alpha_server.models.strats.DummyStrat import DummyStrat
 
 @register_route(prefix="/strategies", tags=["strategies"])

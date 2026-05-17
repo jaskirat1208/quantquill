@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: quantquill-api
+    ports:
+      - "8091:8091"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./packages:/app/packages
+      - ./configs:/app/configs
+    restart: unless-stopped
+    networks:
+      - quantquill-network
+
+  frontend:
+    build:
+      context: ./apps/alpha-dashboard
+      dockerfile: Dockerfile
+    container_name: quantquill-frontend
+    ports:
+      - "8090:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - quantquill-network
+
+networks:
+  quantquill-network:
+    driver: bridge
