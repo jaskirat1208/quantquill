@@ -14,7 +14,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire project
 COPY packages/ ./packages/
 COPY pyproject.toml .
-COPY configs/ ./configs/
 
 # Install the quant-quill package in development mode
 RUN pip install -e .
