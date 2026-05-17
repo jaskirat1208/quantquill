@@ -9,17 +9,22 @@ TAG_VERSION=$(echo "$REPO_TAG" | sed 's/.*-//')
 mkdir -p /opt/jazz/apps/${REPO_NAME}
 cd /opt/jazz/apps/${REPO_NAME}
 
-# Stop existing containers if directory exists
-if [ -d "$REPO_TAG" ]; then
-    cd "$REPO_TAG"
-    sudo docker compose down
-    cd ..
+# Stop containers from currently deployed version (if symlink exists)
+if [ -L "$REPO_NAME" ]; then
+    CURRENT_VERSION=$(readlink "$REPO_NAME")
+    if [ -d "$CURRENT_VERSION" ]; then
+        cd "$CURRENT_VERSION"
+        sudo docker compose down
+        cd ..
+    fi
 fi
 
-# Clone the repository with specific tag (add v prefix)
-git clone --branch "v${TAG_VERSION}" --depth 1 --single-branch "https://github.com/jaskirat1208/${REPO_NAME}.git" "$REPO_TAG"
+# Clone the repository if it doesn't exist
+if [ ! -d "$REPO_TAG" ]; then
+    git clone --branch "v${TAG_VERSION}" --depth 1 --single-branch "https://github.com/jaskirat1208/${REPO_NAME}.git" "$REPO_TAG"
+fi
 
-# Create symlink
+# Update symlink to point to the target version
 ln -sf "$REPO_TAG" "$REPO_NAME"
 
 # Navigate to the symlink directory
