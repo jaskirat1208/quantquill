@@ -1,12 +1,14 @@
 import React, { useMemo } from 'react'
 import { Paper, Typography, Button, Box } from '@mui/material'
 import { TableChart, Download } from '@mui/icons-material'
+import { useTheme } from '@mui/material/styles'
 import { AgGridReact } from 'ag-grid-react'
 import 'ag-grid-community/styles/ag-grid.css'
-import 'ag-grid-community/styles/ag-theme-alpine.css'
+import 'ag-grid-community/styles/ag-theme-quartz.css'
 import type { TradesTableProps, Trade } from '../types'
 
 const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
+  const theme = useTheme()
   const columnDefs = useMemo(() => [
     {
       field: 'timestamp',
@@ -140,15 +142,15 @@ const TradesTable: React.FC<TradesTableProps> = ({ trades }) => {
 
       {trades && trades.length > 0 ? (
         <div 
-          className="ag-theme-alpine-dark"
+          className="ag-theme-quartz"
           style={{ 
             height: 'auto',
-            '--ag-background-color': '#1e293b',
-            '--ag-foreground-color': '#fff',
-            '--ag-header-background-color': '#374151',
-            '--ag-header-foreground-color': '#fff',
-            '--ag-row-hover-color': '#374151',
-            '--ag-border-color': '#4b5563',
+            '--ag-background-color': theme.palette.background.default,
+            '--ag-foreground-color': theme.palette.text.primary,
+            '--ag-header-background-color': theme.palette.background.paper,
+            '--ag-header-foreground-color': theme.palette.text.primary,
+            '--ag-row-hover-color': theme.palette.action.hover,
+            '--ag-border-color': theme.palette.divider,
           } as React.CSSProperties}
         >
           <AgGridReact
