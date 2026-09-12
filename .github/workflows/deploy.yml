@@ -1,0 +1,60 @@
+name: Deploy to Production
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and save Docker images
+        run: |
+          docker compose build
+          docker save quantquill-api:latest | gzip > quantquill-api.tar.gz
+          docker save quantquill-frontend:latest | gzip > quantquill-frontend.tar.gz
+
+      - name: Copy files to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: |
+            docker-compose.yml
+            quantquill-api.tar.gz
+            quantquill-frontend.tar.gz
+            configs/
+          target: /opt/jazz/apps/quantquill/
+          strip_components: 0
+
+      - name: Load Docker images on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/jazz/apps/quantquill
+            docker load < quantquill-api.tar.gz
+            docker load < quantquill-frontend.tar.gz
+            rm quantquill-api.tar.gz quantquill-frontend.tar.gz
+            docker compose up -d
+            docker system prune -f
+
+      - name: Restart systemd service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo systemctl restart quantquill
