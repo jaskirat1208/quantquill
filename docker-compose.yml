@@ -13,6 +13,7 @@ services:
     volumes:
       - ./packages:/app/packages
       - ./configs:/app/configs
+      - ~/.keys.cnf:/root/.keys.cnf:ro
     restart: unless-stopped
     networks:
       - quantquill-network

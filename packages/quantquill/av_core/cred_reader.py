@@ -13,7 +13,7 @@ class CredentialsReader:
         if section in self.config:
             return dict(self.config.items(section))
         else:
-            raise ValueError(f"Section '{section}' not found in the configuration file.")
+            raise ValueError(f"Section '{section}' not found in the configuration file {self.file_path}")
         
     def getConfig(self):
         return self.config

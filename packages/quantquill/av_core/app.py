@@ -13,7 +13,7 @@ class App:
 
         cred_reader = CredentialsReader(config_file)
         self.config = cred_reader.getConfig()
-        self.logger.info("Application initialized successfully.")
+        self.logger.info(f"Application initialized successfully. Config: {config_file}")
         
 # Example usage
 if __name__ == "__main__":
