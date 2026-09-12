@@ -6,15 +6,20 @@ REPO_TAG=$1
 REPO_NAME=$(echo "$REPO_TAG" | sed 's/-[^-]*$//')
 TAG_VERSION=$(echo "$REPO_TAG" | sed 's/.*-//')
 
-mkdir -p /opt/jazz/apps/${REPO_NAME}
-cd /opt/jazz/apps/${REPO_NAME}
+TARGET_DIR="/opt/jazz/apps/${REPO_NAME}"
+SERVICE_NAME="quantquill"
+
+echo "Deploying ${REPO_NAME} version ${TAG_VERSION} to ${TARGET_DIR}..."
+
+mkdir -p "$TARGET_DIR"
+cd "$TARGET_DIR"
 
 # Stop containers from currently deployed version (if symlink exists)
 if [ -L "$REPO_NAME" ]; then
     CURRENT_VERSION=$(readlink "$REPO_NAME")
     if [ -d "$CURRENT_VERSION" ]; then
         cd "$CURRENT_VERSION"
-        docker compose down
+        docker compose down || true
         cd ..
     fi
 fi
@@ -28,4 +33,25 @@ fi
 ln -sf "$REPO_TAG" "$REPO_NAME"
 
 # Navigate to the symlink directory
-cd "$REPO_NAME" 
+cd "$REPO_NAME"
+
+# Build and start Docker services
+echo "Building Docker images..."
+docker compose build
+
+echo "Starting services..."
+docker compose up -d
+
+# Setup systemd service
+echo "Setting up systemd service..."
+sudo cp systemd/quantquill.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable $SERVICE_NAME
+sudo systemctl restart $SERVICE_NAME
+
+echo "Deployment complete!"
+echo "Version: ${TAG_VERSION}"
+echo "Services running at:"
+echo "  - Frontend: http://localhost:8090"
+echo "  - API: http://localhost:8091"
+ 
