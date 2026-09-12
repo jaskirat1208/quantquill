@@ -83,7 +83,7 @@ export interface OIData {
 
 export const oiMonitorApi = {
   getOIData: (underlying: string, strike: number, expiry: string, interval: string) =>
-    api.get<OIData[]>('/oi_monitor', {
+    api.get<OIData[]>('/oi_monitor/', {
       params: { underlying, strike, expiry, interval },
     }),
 };
