@@ -23,6 +23,7 @@ const OIMonitorPage: React.FC = () => {
   const [strike, setStrike] = useState<string>('23400')
   const [expiry, setExpiry] = useState<string>('15SEP26')
   const [interval, setInterval] = useState<string>('FIVE_MINUTE')
+  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
@@ -47,7 +48,8 @@ const OIMonitorPage: React.FC = () => {
         return new Date(params.value).toLocaleDateString('en-IN', {
           day: '2-digit',
           month: 'short',
-          year: 'numeric'
+          year: 'numeric',
+          timeZone: 'Asia/Kolkata'
         })
       }
     },
@@ -62,7 +64,8 @@ const OIMonitorPage: React.FC = () => {
         return new Date(params.value).toLocaleTimeString('en-IN', {
           hour: '2-digit',
           minute: '2-digit',
-          hour12: true
+          hour12: true,
+          timeZone: 'Asia/Kolkata'
         })
       }
     },
@@ -112,7 +115,8 @@ const OIMonitorPage: React.FC = () => {
         underlying,
         parseInt(strike),
         expiry,
-        interval
+        interval,
+        date
       )
       setData(response.data)
     } catch (err) {
@@ -178,6 +182,18 @@ const OIMonitorPage: React.FC = () => {
                 </MenuItem>
               ))}
             </Select>
+          </FormControl>
+
+          <FormControl sx={{ minWidth: 180 }}>
+            <TextField
+              label="Date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              InputLabelProps={{
+                shrink: true,
+              }}
+            />
           </FormControl>
 
           <Button 
