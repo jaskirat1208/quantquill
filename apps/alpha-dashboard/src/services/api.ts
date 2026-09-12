@@ -72,4 +72,20 @@ export const healthApi = {
   getRoot: () => api.get<{ message: string; status: string }>('/'),
 };
 
+// OI Monitor API
+export interface OIData {
+  timestamp: string;
+  call_oi: number;
+  put_oi: number;
+  call_oi_change: number;
+  put_oi_change: number;
+}
+
+export const oiMonitorApi = {
+  getOIData: (underlying: string, strike: number, expiry: string, interval: string) =>
+    api.get<OIData[]>('/oi_monitor', {
+      params: { underlying, strike, expiry, interval },
+    }),
+};
+
 export default api;

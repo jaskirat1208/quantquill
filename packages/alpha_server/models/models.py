@@ -8,7 +8,7 @@ class StrategyResult:
                  profit_loss: Optional[float] = None, max_drawdown: Optional[float] = None,
                  volatility: Optional[float] = None, sharpe_ratio: Optional[float] = None,
                  win_rate: Optional[float] = None, total_return: Optional[float] = None,
-                 portfolio_snapshots: Optional[List[Dict]] = None):
+                 portfolio_snapshots: Optional[List[Dict]] = None, market_snapshots: Optional[List[Dict]] = None):
         self.strategy_name = strategy_name
         self.symbol = symbol
         self.executed_at = datetime.now()
@@ -23,6 +23,8 @@ class StrategyResult:
         self.win_rate = win_rate
         self.total_return = total_return
         self.portfolio_snapshots = portfolio_snapshots
+        # Shows Latest spot value for an instrument
+        self.market_snapshots = market_snapshots 
     
     def to_dict(self):
         return {
@@ -39,7 +41,8 @@ class StrategyResult:
             "sharpe_ratio": self.sharpe_ratio,
             "win_rate": self.win_rate,
             "total_return": self.total_return,
-            "portfolio_snapshots": self.portfolio_snapshots
+            "portfolio_snapshots": self.portfolio_snapshots,
+            "market_snapshots": self.market_snapshots
         }
 
 class StrategyInfo:

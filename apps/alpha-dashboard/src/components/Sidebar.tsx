@@ -14,7 +14,8 @@ import {
   Home as HomeIcon,
   TrendingUp as BacktesterIcon,
   Help as HelpIcon,
-  TableChart as TableIcon
+  TableChart as TableIcon,
+  Assessment as OIIcon
 } from '@mui/icons-material'
 import type { SidebarProps } from '../types'
 
@@ -22,6 +23,7 @@ const menuItems = [
   { id: 'home', label: 'Home', icon: HomeIcon },
   { id: 'nse-ab-backtester', label: 'NSE AB Backtester', icon: BacktesterIcon },
   { id: 'instruments', label: 'Instruments', icon: TableIcon },
+  { id: 'oi-monitor', label: 'OI Monitor', icon: OIIcon },
 ]
 
 const drawerWidth = 240

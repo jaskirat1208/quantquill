@@ -17,6 +17,20 @@ export interface PortfolioSnapshot {
   pnl: number
 }
 
+export interface MarketSnapshot {
+  timestamp: string
+  short_ewma: number
+  long_ewma: number
+  [key: string]: number | string
+}
+
+export interface Indicators {
+  short_ewma: number
+  long_ewma: number
+  trend: string
+  no_of_crossovers: number
+}
+
 export interface StrategyResult {
   strategy_name: string
   symbol: string
@@ -32,6 +46,8 @@ export interface StrategyResult {
   win_rate?: number
   total_return?: number
   portfolio_snapshots?: PortfolioSnapshot[]
+  market_snapshots?: MarketSnapshot[]
+  indicators?: Indicators
 }
 
 export interface StrategyInfo {

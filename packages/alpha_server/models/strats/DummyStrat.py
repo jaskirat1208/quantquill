@@ -75,7 +75,7 @@ class DummyStrat(SignalHandler):
         pnl = risk['pnl']
 
         trades_dict = [asdict(trade) for trade in trades]
-        
+        print(self.strategy.summary())
         return StrategyResult(
             strategy_name=self.__class__.__name__,
             symbol=self.platform.symbols[0] if self.platform.symbols else "UNKNOWN",
@@ -90,7 +90,8 @@ class DummyStrat(SignalHandler):
             volatility=risk['volatility'],
             sharpe_ratio=risk['sharpe_ratio'],
             total_return=pnl / position_manager.starting_cash * 100,
-            portfolio_snapshots=risk['snapshots']
+            portfolio_snapshots=risk['snapshots'],
+            market_snapshots=self.strategy.summary().get('ewma_history', []).to_dict('records')
         )    
 
 
