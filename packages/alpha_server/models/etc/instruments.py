@@ -1,5 +1,6 @@
 from quantquill.data.angel_one.utils import SmartAPIWithInstruments  as SmartApi
 
+
 def get_instruments():
     api = SmartApi.SmartConnect()
     symbolInfo = api.symbol_map
@@ -8,6 +9,12 @@ def get_instruments():
 def get_instrument_info():
     pass
 
+def get_smart_connect():
+    return SmartApi.SmartConnect()
+
+def getInstrumentsByUnderlying(underlying: str):
+    api = get_smart_connect()
+    return api.getInstrumentsByUnderlying(underlying)
 
 def __main__():
     instruments = get_instruments()

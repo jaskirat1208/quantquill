@@ -5,6 +5,7 @@ import json
 import os
 import time
 from quantquill.av_core.logger import LoggerConfig
+import pandas as pd
 from quantquill.data.angel_one.utils.constants import INSTRUMENTS_URL, INSTRUMENTS_CACHE_PATH, CANDLE_INFO_MAX_DAYS
 
 
@@ -55,7 +56,22 @@ class SmartConnect(api.SmartConnect):
             self.symbol_map[instrument['symbol']] = instrument
             self.token_map[instrument['token']] = instrument
 
+        self.instruments_df = pd.DataFrame(instruments)
+        self.underlyings = self.instruments_df['name'].unique().tolist()
         self.logger.info(f"Symbol map and token map created with {len(self.symbol_map)} entries each.")
+        self.logger.info(f"Underlyings: {len(self.underlyings)}")
+
+    def getInstrumentsByUnderlying(self, underlying, instrtypes=['OPTIDX', "OPTSTK"]):
+        instr_df =  self.instruments_df[(self.instruments_df['name'] == underlying) & (self.instruments_df['instrumenttype'].isin(instrtypes))]
+        return [
+            {
+            'token': r['token'],
+            'symbol': r['symbol'], 
+            'strike': int(float(r['strike'])), 
+            'expiry': r['expiry'],
+            'exchange': r['exch_seg']
+            } for _, r in instr_df.iterrows()
+        ]
 
     def _fetchInstrumentsFromAPI(self):
         response = requests.get(INSTRUMENTS_URL)
