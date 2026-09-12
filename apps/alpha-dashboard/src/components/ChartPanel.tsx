@@ -3,8 +3,7 @@ import { Paper, Typography, Grid, Box } from '@mui/material'
 import { TrendingUp } from '@mui/icons-material'
 import Highcharts from 'highcharts'
 import HighchartsReact from 'highcharts-react-official'
-import type { ChartPanelProps, PortfolioSnapshot } from '../types'
-
+import type { ChartPanelProps, PortfolioSnapshot, MarketSnapshot } from '../types'
 const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
   if (!strategyResults) {
     return (
@@ -22,12 +21,44 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
     )
   }
 
-  const { trades, strategy_name, profit_loss, portfolio_snapshots } = strategyResults
+  const { trades, strategy_name, market_snapshots, profit_loss, portfolio_snapshots, indicators } = strategyResults
+  
+  // Date formatter for IST timezone
+  const dateFormatter = (date: Date): string => {
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+    const istDate = new Date(date.getTime() + istOffset + (date.getTimezoneOffset() * 60 * 1000));
+    
+    const year = istDate.getFullYear();
+    const month = (istDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = istDate.getDate().toString().padStart(2, '0');
+    const hours = istDate.getHours().toString().padStart(2, '0');
+    const minutes = istDate.getMinutes().toString().padStart(2, '0');
+    
+    const currentYear = new Date().getFullYear();
+    const showYear = year !== currentYear || (month === '01' && day === '01');
+    
+    if (showYear) {
+      return `${year}/${month}/${day}<br/>${hours}:${minutes}`;
+    } else {
+      return `${month}/${day}<br/>${hours}:${minutes}`;
+    }
+  }
   
   // Use portfolio snapshots from backend for P&L data
   const pnlDataWithTime = portfolio_snapshots?.map((snapshot: PortfolioSnapshot) => [
     new Date(snapshot.timestamp).getTime(),
     snapshot.pnl
+  ]) || []
+
+  // Prepare indicator data for chart
+  const shortEwmaData = market_snapshots?.map((snapshot: MarketSnapshot) => [
+    new Date(snapshot.timestamp).getTime(),
+    snapshot.short_ewma
+  ]) || []
+
+  const longEwmaData = market_snapshots?.map((snapshot: MarketSnapshot) => [
+    new Date(snapshot.timestamp).getTime(),
+    snapshot.long_ewma
   ]) || []
 
   // For backward compatibility - trade number based P&L from backend data
@@ -36,7 +67,8 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
     snapshot.pnl
   ]) || []
 
-  const chartOptions: Highcharts.Options = {
+  // Indicator values chart (replaces running P&L chart)
+  const indicatorChartOptions: Highcharts.Options = {
     chart: {
       type: 'line',
       backgroundColor: 'transparent',
@@ -45,7 +77,7 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
       }
     },
     title: {
-      text: `${strategy_name.replace('_', ' ').toUpperCase()} Performance`,
+      text: `${strategy_name.replace('_', ' ').toUpperCase()} - Moving Averages`,
       style: {
         color: '#fff',
         fontSize: '16px',
@@ -53,13 +85,20 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
       }
     },
     xAxis: {
-      title: { text: 'Trade Number', style: { color: '#9ca3af' } },
-      labels: { style: { color: '#9ca3af' } },
+      type: 'datetime',
+      title: { text: 'Date & Time', style: { color: '#9ca3af' } },
+      labels: { 
+        style: { color: '#9ca3af' },
+        formatter: function() {
+          return dateFormatter(new Date(this.value));
+        },
+        useHTML: true
+      },
       lineColor: '#4b5563',
       tickColor: '#4b5563'
     },
     yAxis: {
-      title: { text: 'P&L (₹)', style: { color: '#9ca3af' } },
+      title: { text: 'Indicator Value', style: { color: '#9ca3af' } },
       labels: { style: { color: '#9ca3af' } },
       lineColor: '#4b5563',
       tickColor: '#4b5563',
@@ -71,13 +110,22 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
     },
     series: [
       {
-        name: 'Running P&L',
-        data: pnlData,
-        color: (profit_loss || 0) >= 0 ? '#10b981' : '#ef4444',
-        lineWidth: 3,
+        name: 'Short EWMA',
+        data: shortEwmaData,
+        color: '#3b82f6',
+        lineWidth: 2,
         marker: {
-          enabled: true,
-          radius: 4
+          enabled: false
+        },
+        type: 'line'
+      },
+      {
+        name: 'Long EWMA',
+        data: longEwmaData,
+        color: '#f59e0b',
+        lineWidth: 2,
+        marker: {
+          enabled: false
         },
         type: 'line'
       }
@@ -90,7 +138,21 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
     tooltip: {
       backgroundColor: '#1e293b',
       borderColor: '#4b5563',
-      style: { color: '#fff' }
+      style: { color: '#fff' },
+      pointFormatter: function() {
+        const date = new Date((this as any).x);
+        const istOffset = 5.5 * 60 * 60 * 1000;
+        const istDate = new Date(date.getTime() + istOffset + (date.getTimezoneOffset() * 60 * 1000));
+        
+        const year = istDate.getFullYear();
+        const month = (istDate.getMonth() + 1).toString().padStart(2, '0');
+        const day = istDate.getDate().toString().padStart(2, '0');
+        const hours = istDate.getHours().toString().padStart(2, '0');
+        const minutes = istDate.getMinutes().toString().padStart(2, '0');
+        
+        return `<span style="color: ${(this as any).color}">●</span> ${this.series.name}: <b>${(this as any).y.toFixed(2)}</b><br/>
+                <span style="color: #9ca3af">Time: ${year}-${month}-${day} ${hours}:${minutes} IST</span>`
+      }
     }
   }
 
@@ -146,26 +208,7 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
       labels: { 
         style: { color: '#9ca3af' },
         formatter: function() {
-          const date = new Date(this.value);
-          // Convert to IST (UTC+5:30)
-          const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
-          const istDate = new Date(date.getTime() + istOffset + (date.getTimezoneOffset() * 60 * 1000));
-          
-          const year = istDate.getFullYear();
-          const month = (istDate.getMonth() + 1).toString().padStart(2, '0');
-          const day = istDate.getDate().toString().padStart(2, '0');
-          const hours = istDate.getHours().toString().padStart(2, '0');
-          const minutes = istDate.getMinutes().toString().padStart(2, '0');
-          
-          // Show year only if it's not the current year or if it's Jan 1st
-          const currentYear = new Date().getFullYear();
-          const showYear = year !== currentYear || (month === '01' && day === '01');
-          
-          if (showYear) {
-            return `${year}/${month}/${day}<br/>${hours}:${minutes}`;
-          } else {
-            return `${month}/${day}<br/>${hours}:${minutes}`;
-          }
+          return dateFormatter(new Date(this.value));
         },
         useHTML: true
       },
@@ -246,15 +289,15 @@ const ChartPanel: React.FC<ChartPanelProps> = ({ strategyResults }) => {
         </Grid>
         <Grid item xs={4}>
           <Paper sx={{ p: 2, textAlign: 'center', bgcolor: 'background.default' }}>
-            <Typography variant="body2" color="text.secondary">Avg per Trade</Typography>
-            <Typography variant="h5" fontWeight="bold">
-              ₹{trades?.length ? ((profit_loss || 0) / trades.length).toFixed(2) : '0.00'}
+            <Typography variant="body2" color="text.secondary">Current Trend</Typography>
+            <Typography variant="h5" fontWeight="bold" color={indicators?.trend === 'UP' ? 'success.main' : indicators?.trend === 'DOWN' ? 'error.main' : 'warning.main'}>
+              {indicators?.trend || 'N/A'}
             </Typography>
           </Paper>
         </Grid>
       </Grid>
 
-      <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+      <HighchartsReact highcharts={Highcharts} options={indicatorChartOptions} />
       <Box sx={{ mt: 2 }}>
         <HighchartsReact highcharts={Highcharts} options={pnlChartOptions} />
       </Box>
