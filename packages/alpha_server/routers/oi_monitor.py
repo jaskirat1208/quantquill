@@ -4,6 +4,7 @@ from alpha_server.core.route_registry import register_route
 from alpha_server.models.etc import instruments as instapi
 from quantquill.data.angel_one.utils.app import AngelOneSmartApp
 import pandas as pd
+from datetime import datetime
 
 @register_route(prefix="/oi_monitor", tags=["oi_monitor"])
 class OIMonitorRouter:
@@ -17,10 +18,10 @@ class OIMonitorRouter:
         underlying: str = Query(..., description="Underlying symbol"),
         strike: int = Query(..., description="Strike price(INR)"),
         expiry: str = Query(..., description="Expiry date (DDMMMYY)"),
-        interval: str = Query(..., description="Interval: (ONE_MINUTE|THREE_MINUTE|FIVE_MINUTE)")
+        interval: str = Query(..., description="Interval: (ONE_MINUTE|THREE_MINUTE|FIVE_MINUTE)"),
+        date: str = Query(..., description="Date (YYYY-MM-DD)")
     ):
-        if not underlying: 
-            return []
+        date_str = date
         
         # TODO: Implement OI data retrieval logic
         call_name = f"{underlying}{expiry}{strike}CE"
@@ -34,8 +35,8 @@ class OIMonitorRouter:
                 "exchange": tok['exch_seg'], 
                 "symboltoken": tok['token'],
                 "interval": interval,
-                "fromdate": "2026-09-11 09:11",
-                "todate": "2026-09-11 15:00"
+                "fromdate": f"{date_str} 00:00",
+                "todate": f"{date_str} 23:59"
             })
             oi_data.append(resp['data'])
 
@@ -67,6 +68,3 @@ class OIMonitorRouter:
         merged_df = merged_df.fillna(0)
         
         return merged_df.to_dict(orient='records')
-
-
-        

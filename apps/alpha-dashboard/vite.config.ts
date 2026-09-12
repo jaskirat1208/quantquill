@@ -13,7 +13,7 @@ export default defineConfig({
     port: 3001,
     proxy: {
       '/api': {
-        target: 'http://thinkcentre-m73:8091',
+        target: 'http://thinkcentre-m73:12591',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '')
       }
