@@ -37,9 +37,9 @@ const OIMonitorPage: React.FC = () => {
   ]
 
   const columnDefs = [
-    { 
-      headerName: 'Date', 
-      field: 'timestamp', 
+    {
+      headerName: 'Date',
+      field: 'timestamp',
       width: 150,
       sortable: true,
       filter: true,
@@ -53,9 +53,9 @@ const OIMonitorPage: React.FC = () => {
         })
       }
     },
-    { 
-      headerName: 'Time', 
-      field: 'timestamp', 
+    {
+      headerName: 'Time',
+      field: 'timestamp',
       width: 120,
       sortable: true,
       filter: true,
@@ -69,41 +69,71 @@ const OIMonitorPage: React.FC = () => {
         })
       }
     },
-    { 
-      headerName: 'Call OI', 
-      field: 'call_oi', 
-      width: 150,
-      sortable: true,
-      filter: true,
-      cellStyle: { color: '#10b981' }
+    {
+      headerName: 'Put OI',
+      children: [
+        {
+          headerName: 'Total',
+          field: 'put_oi',
+          width: 150,
+          sortable: true,
+          filter: true,
+          cellStyle: { color: '#ef4444' }
+        },
+        {
+          headerName: 'Change',
+          field: 'put_oi_change',
+          width: 150,
+          sortable: true,
+          filter: true,
+          cellStyle: (params: any) => ({
+            color: params.value > 0 ? '#10b981' : params.value < 0 ? '#ef4444' : '#ffffff'
+          })
+        },
+      ],
+      headerClass: 'center-header' 
+
     },
-    { 
-      headerName: 'Put OI', 
-      field: 'put_oi', 
-      width: 150,
-      sortable: true,
-      filter: true,
-      cellStyle: { color: '#ef4444' }
+    {
+      headerName: 'Call OI',
+      children: [
+        {
+          headerName: 'Total',
+          field: 'call_oi',
+          width: 150,
+          sortable: true,
+          filter: true,
+          cellStyle: { color: '#10b981' }
+        },
+        {
+          headerName: 'Change',
+          field: 'call_oi_change',
+          width: 150,
+          sortable: true,
+          filter: true,
+          cellStyle: (params: any) => ({
+            color: params.value > 0 ? '#10b981' : params.value < 0 ? '#ef4444' : '#ffffff'
+          })
+        },
+      ],
+      headerClass: 'center-header' 
+
     },
-    { 
-      headerName: 'Call OI Change', 
-      field: 'call_oi_change', 
-      width: 150,
-      sortable: true,
-      filter: true,
-      cellStyle: (params: any) => ({
-        color: params.value > 0 ? '#10b981' : params.value < 0 ? '#ef4444' : '#ffffff'
-      })
-    },
-    { 
-      headerName: 'Put OI Change', 
-      field: 'put_oi_change', 
-      width: 150,
-      sortable: true,
-      filter: true,
-      cellStyle: (params: any) => ({
-        color: params.value > 0 ? '#10b981' : params.value < 0 ? '#ef4444' : '#ffffff'
-      })
+    {
+      headerName: 'PCR',
+      children: [
+        {
+          headerName: 'Total',
+          field: 'put_call_ratio',
+          width: 150,
+          sortable: true,
+          filter: true,
+          valueFormatter: (params: { value: number }) => {
+            if (params.value === null || params.value === undefined) return '-'
+            return params.value.toFixed(2)
+          }
+        },
+      ]
     },
   ]
 
@@ -216,9 +246,9 @@ const OIMonitorPage: React.FC = () => {
       {data.length > 0 && (
         <Paper sx={{ p: 2, bgcolor: 'background.paper' }}>
           <Box sx={{ height: 500, width: '100%' }}>
-            <div 
+            <div
               className="ag-theme-quartz"
-              style={{ 
+              style={{
                 height: '100%',
                 width: '100%',
                 '--ag-background-color': theme.palette.background.default,

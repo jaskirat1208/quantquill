@@ -79,6 +79,7 @@ export interface OIData {
   put_oi: number;
   call_oi_change: number;
   put_oi_change: number;
+  put_call_ratio: number;
 }
 
 export const oiMonitorApi = {
