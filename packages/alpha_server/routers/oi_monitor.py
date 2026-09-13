@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from typing import Optional
+from typing import Optional, List
 from alpha_server.core.route_registry import register_route
 from alpha_server.models.etc import instruments as instapi
 from quantquill.data.angel_one.utils.app import AngelOneSmartApp
@@ -12,31 +12,54 @@ class OIMonitorRouter:
         self.router = APIRouter(prefix=prefix, tags=tags, dependencies=dependencies)
 
         # Register routes
-        self.router.add_api_route("/", self.get_oi_data, methods=["GET"])
+        self.router.add_api_route("/", self.get_single_strike_oi, methods=["GET"])
+        self.router.add_api_route("/multi", self.get_multiple_strikes_oi, methods=["GET"])
     
-    async def get_oi_data(self, 
+    async def get_single_strike_oi(self, 
         underlying: str = Query(..., description="Underlying symbol"),
         strike: int = Query(..., description="Strike price(INR)"),
         expiry: str = Query(..., description="Expiry date (DDMMMYY)"),
         interval: str = Query(..., description="Interval: (ONE_MINUTE|THREE_MINUTE|FIVE_MINUTE)"),
         date: str = Query(..., description="Date (YYYY-MM-DD)")
     ):
-        date_str = date
-        
-        # TODO: Implement OI data retrieval logic
-        call_name = f"{underlying}{expiry}{strike}CE"
-        put_name = f"{underlying}{expiry}{strike}PE"
         platform = AngelOneSmartApp(instance_name='oi_monitor')
         client = platform.get_client()
+        option_template = f"{underlying}{expiry}{strike}"
+        oi_data_df = self.get_oi_data(option_template, interval, date, client)
+        return self.calculate_pcr(oi_data_df)
+        
+
+    async def get_multiple_strikes_oi(self,
+            underlying: str = Query(..., description="Underlying symbol"),
+            strikes: List[int] = Query(default=[], description="Strike price(INR) - repeat parameter for multiple values"),
+            expiry: str = Query(..., description="Expiry date (DDMMMYY)"),
+            interval: str = Query(..., description="Interval: (ONE_MINUTE|THREE_MINUTE|FIVE_MINUTE)"),
+            date: str = Query(..., description="Date (YYYY-MM-DD)")
+    ):
+        platform = AngelOneSmartApp(instance_name='oi_monitor')
+        client = platform.get_client()
+        oi_data_list = []
+        for strike in strikes:
+            option_template = f"{underlying}{expiry}{strike}"
+            oi_data = self.get_oi_data(option_template, interval, date, client)
+            oi_data_list.append(oi_data)
+        
+        oi_data_agg_df = pd.concat(oi_data_list).groupby("timestamp").sum().reset_index()
+        return self.calculate_pcr(oi_data_agg_df)
+
+
+    def get_oi_data(self, option_template: str,  interval: str, date: str, smartapi_client):
+        call_name = f"{option_template}CE"
+        put_name = f"{option_template}PE"
         oi_data = []
         for sym in [call_name, put_name]:
-            tok = client.getInstrumentBySymbol(sym)
-            resp = client.getOIData({
+            tok = smartapi_client.getInstrumentBySymbol(sym)
+            resp = smartapi_client.getOIData({
                 "exchange": tok['exch_seg'], 
                 "symboltoken": tok['token'],
                 "interval": interval,
-                "fromdate": f"{date_str} 00:00",
-                "todate": f"{date_str} 23:59"
+                "fromdate": f"{date} 00:00",
+                "todate": f"{date} 23:59"
             })
             oi_data.append(resp['data'])
 
@@ -60,11 +83,15 @@ class OIMonitorRouter:
         # Sort by timestamp
         merged_df = merged_df.sort_values('timestamp')
         
+        return merged_df
+
+    def calculate_pcr(self, oi_data_df):
         # Calculate OI change (current - previous)
-        merged_df['call_oi_change'] = merged_df['call_oi'].diff()
-        merged_df['put_oi_change'] = merged_df['put_oi'].diff()
+        oi_data_df['call_oi_change'] = oi_data_df['call_oi'].diff()
+        oi_data_df['put_oi_change'] = oi_data_df['put_oi'].diff()
+        oi_data_df['put_call_ratio'] = oi_data_df['put_oi'] / oi_data_df['call_oi']
         
         # Replace NaN values with 0
-        merged_df = merged_df.fillna(0)
+        oi_data_df = oi_data_df.fillna(0)
         
-        return merged_df.to_dict(orient='records')
+        return oi_data_df.to_dict(orient='records')
