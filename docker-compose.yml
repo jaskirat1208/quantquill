@@ -12,7 +12,6 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ./packages:/app/packages
-      - ./configs:/app/configs
       - /home/jaskirat/.keys.cnf:/root/.keys.cnf:ro
     restart: unless-stopped
     networks:
