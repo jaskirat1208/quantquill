@@ -62,20 +62,6 @@ cd "$REPO_NAME"
 echo "Building Docker images..."
 docker compose build
 
-echo "Starting services..."
-docker compose up -d
-
-# Setup systemd service
-echo "Setting up systemd service..."
-if [ -f "systemd/quantquill.service" ]; then
-    sudo cp systemd/quantquill.service /etc/systemd/system/
-    sudo systemctl daemon-reload
-    sudo systemctl enable $SERVICE_NAME
-    sudo systemctl restart $SERVICE_NAME
-else
-    echo "WARNING: systemd service file not found, skipping systemd setup"
-fi
-
 echo "Deployment complete!"
 echo "Version: ${TAG_VERSION}"
 echo "Services running at:"
