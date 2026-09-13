@@ -6,7 +6,7 @@ import configparser
 class AlphaServer(av_core.app.App):
     def __init__(self):
         config = configparser.ConfigParser()
-        config.read('./configs/start_alpha_server.py.cnf')
+        config.read('./configs/start_alpha_server.py.prod.cnf')
         self.port = config.getint('server', 'port', fallback=8091)
     
     def start(self):
