@@ -56,7 +56,7 @@ async def root():
     return {"message": "Alpha Server - QuantQuill API", "status": "running", "docs": "/docs"}
 
 
-def start_alpha_server(port=12591, reload=False):
+def start_alpha_server(port=8091, reload=False):
     uvicorn.run(
         app,
         host="0.0.0.0",
