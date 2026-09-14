@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Box,
   Typography,
@@ -16,7 +16,9 @@ import {
   DialogActions,
   Chip,
   IconButton,
-  InputAdornment
+  InputAdornment,
+  FormControlLabel,
+  Switch
 } from '@mui/material'
 import { Clear } from '@mui/icons-material'
 import { useTheme } from '@mui/material/styles'
@@ -33,6 +35,7 @@ const OIMonitorPage: React.FC = () => {
   const [availableExpiries, setAvailableExpiries] = useState<string[]>([])
   const [availableStrikes, setAvailableStrikes] = useState<number[]>([])
   const [strikeDialogOpen, setStrikeDialogOpen] = useState<boolean>(false)
+  const [liveMode, setLiveMode] = useState<boolean>(false)
   const [interval, setInterval] = useState<string>('FIVE_MINUTE')
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0])
   const [data, setData] = useState<any[]>([])
@@ -277,7 +280,7 @@ const OIMonitorPage: React.FC = () => {
     },
   ]
 
-  const handleFetch = async () => {
+  const handleFetch = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
@@ -300,7 +303,17 @@ const OIMonitorPage: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [underlying, selectedStrikes, expiry, interval, date])
+
+  useEffect(() => {
+    if (liveMode && selectedStrikes.length > 0 && expiry) {
+      const intervalId = window.setInterval(() => {
+        handleFetch()
+      }, 60000) // Fetch every minute
+
+      return () => window.clearInterval(intervalId)
+    }
+  }, [liveMode, selectedStrikes, expiry, interval, date, handleFetch])
 
   const handleStrikeClick = (strikeValue: number, event: React.MouseEvent) => {
     if (event.shiftKey && selectedStrikes.length > 0) {
@@ -476,14 +489,25 @@ const OIMonitorPage: React.FC = () => {
             />
           </FormControl>
 
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={handleFetch}
             disabled={loading}
             sx={{ minWidth: 120 }}
           >
             {loading ? <CircularProgress size={24} /> : 'Fetch Data'}
           </Button>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={liveMode}
+                onChange={(e) => setLiveMode(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Live Mode"
+          />
         </Box>
 
         {error && (

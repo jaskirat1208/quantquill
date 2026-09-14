@@ -1,16 +1,17 @@
 import React from 'react'
-import { 
-  Box, 
-  Typography, 
-  Grid, 
-  Card, 
+import {
+  Box,
+  Typography,
+  Grid,
+  Card,
   CardContent,
   Button,
   Container
 } from '@mui/material'
-import { 
-  TrendingUp, 
-  Assessment
+import {
+  TrendingUp,
+  Assessment,
+  MonitorHeart
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 
@@ -73,6 +74,13 @@ const LandingPage: React.FC = () => {
       icon: <TrendingUp sx={{ fontSize: 48 }} />,
       path: '/nse-ab-backtester',
       color: '#0ea5e9'
+    },
+    {
+      title: 'OI Monitor',
+      description: 'Monitor Open Interest data for options to analyze market sentiment and trading opportunities.',
+      icon: <MonitorHeart sx={{ fontSize: 48 }} />,
+      path: '/oi-monitor',
+      color: '#8b5cf6'
     },
     {
       title: 'Instruments',
