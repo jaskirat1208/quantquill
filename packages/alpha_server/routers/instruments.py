@@ -1,9 +1,10 @@
 
 
 from fastapi import APIRouter, Query
-from alpha_server.models.etc.instruments import get_instruments
+from alpha_server.models.etc.instruments import get_instruments, getInstrumentsByUnderlying
 from alpha_server.core.route_registry import register_route
 from typing import Optional, List
+from datetime import datetime
 
 @register_route(prefix="/instruments", tags=["instruments"])
 class InstrumentsRouter:
@@ -13,6 +14,9 @@ class InstrumentsRouter:
         # Register routes
         self.router.add_api_route("/all", self.get_all_instruments, methods=["GET"])
         self.router.add_api_route("/search", self.search_instruments, methods=["GET"])
+        self.router.add_api_route("/option_chain/expiry", self.get_available_expiries, methods=['GET'])
+        self.router.add_api_route("/option_chain/strike", self.get_available_strikes, methods=['GET'])
+
 
     async def get_all_instruments(
         self,
@@ -165,3 +169,30 @@ class InstrumentsRouter:
                     return True
 
         return False
+
+    async def get_available_expiries(
+        self, 
+        underlying: str = Query(..., description = "Underlying, ex: NIFTY, BANKNIFTY")
+    ):
+        instruments = getInstrumentsByUnderlying(underlying)
+        expiries = set()
+        for instrument in instruments:
+            expiry = instrument['expiry']
+
+            expiry_dt = datetime.strptime(expiry, "%d%b%Y")
+            expiries.add(expiry_dt)
+
+        return list(map( lambda r: datetime.strftime(r, "%d%b%y").upper(), sorted(expiries)))
+        
+
+    async def get_available_strikes(
+        self, 
+        underlying: str = Query(..., description = "Underlying, ex: NIFTY, BANKNIFTY"), 
+        expiry: str = Query(..., description = "Expiry date DDMMMYY format. Ex: 15SEP26")
+    ):
+        expiry_dt = datetime.strptime(expiry, "%d%b%y")
+        instruments = getInstrumentsByUnderlying(underlying)
+        import pandas as pd
+        instr_df = pd.DataFrame(instruments)
+        instr_df = instr_df[instr_df['expiry'] == expiry_dt.strftime("%d%b%Y").upper()]
+        return sorted((instr_df['strike']//100).unique().tolist())
