@@ -64,6 +64,16 @@ export const instrumentsApi = {
     };
     return api.get<InstrumentsResponse>('/instruments/all', { params });
   },
+  getAvailableExpiries: (underlying: string) => {
+    return api.get<string[]>('/instruments/option_chain/expiry', {
+      params: { underlying },
+    });
+  },
+  getAvailableStrikes: (underlying: string, expiry: string) => {
+    return api.get<number[]>('/instruments/option_chain/strike', {
+      params: { underlying, expiry },
+    });
+  },
 };
 
 // Health API
@@ -83,9 +93,12 @@ export interface OIData {
 }
 
 export const oiMonitorApi = {
-  getOIData: (underlying: string, strike: number, expiry: string, interval: string, date: string) =>
-    api.get<OIData[]>('/oi_monitor/', {
-      params: { underlying, strike, expiry, interval, date },
+  getOIData: (underlying: string, strikes: number[], expiry: string, interval: string, date: string) =>
+    api.get<OIData[]>('/oi_monitor/multi', {
+      params: { underlying, strikes, expiry, interval, date },
+      paramsSerializer: {
+        indexes: null
+      }
     }),
 };
 

@@ -90,6 +90,8 @@ class OIMonitorRouter:
         oi_data_df['call_oi_change'] = oi_data_df['call_oi'].diff()
         oi_data_df['put_oi_change'] = oi_data_df['put_oi'].diff()
         oi_data_df['put_call_ratio'] = oi_data_df['put_oi'] / oi_data_df['call_oi']
+        oi_data_df['put_call_difference'] = oi_data_df['put_oi'] - oi_data_df['call_oi']
+        oi_data_df['put_call_diff_change'] = oi_data_df['put_call_difference'].diff()
         
         # Replace NaN values with 0
         oi_data_df = oi_data_df.fillna(0)
