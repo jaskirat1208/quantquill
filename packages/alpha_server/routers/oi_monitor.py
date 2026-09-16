@@ -5,6 +5,7 @@ from alpha_server.models.etc import instruments as instapi
 from quantquill.data.angel_one.utils.app import AngelOneSmartApp
 import pandas as pd
 from datetime import datetime
+from quantquill.data.angel_one.utils.SmartAPIWithInstruments import SmartConnect
 
 @register_route(prefix="/oi_monitor", tags=["oi_monitor"])
 class OIMonitorRouter:
@@ -48,7 +49,7 @@ class OIMonitorRouter:
         return self.calculate_pcr(oi_data_agg_df)
 
 
-    def get_oi_data(self, option_template: str,  interval: str, date: str, smartapi_client):
+    def get_oi_data(self, option_template: str,  interval: str, date: str, smartapi_client: SmartConnect):
         call_name = f"{option_template}CE"
         put_name = f"{option_template}PE"
         oi_data = []
@@ -90,6 +91,7 @@ class OIMonitorRouter:
         oi_data_df['call_oi_change'] = oi_data_df['call_oi'].diff()
         oi_data_df['put_oi_change'] = oi_data_df['put_oi'].diff()
         oi_data_df['put_call_ratio'] = oi_data_df['put_oi'] / oi_data_df['call_oi']
+        oi_data_df['put_call_ratio_change'] = oi_data_df['put_call_ratio'].diff()
         oi_data_df['put_call_difference'] = oi_data_df['put_oi'] - oi_data_df['call_oi']
         oi_data_df['put_call_diff_change'] = oi_data_df['put_call_difference'].diff()
         

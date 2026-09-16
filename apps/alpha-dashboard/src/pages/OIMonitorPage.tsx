@@ -230,8 +230,33 @@ const OIMonitorPage: React.FC = () => {
           headerClass: 'blue-header',
           valueFormatter: (params: { value: number }) => {
             if (params.value === null || params.value === undefined) return '-'
-            return params.value.toFixed(2)
+            return new Intl.NumberFormat('en-IN').format(params.value)
+          },
+          cellStyle: (params: any) => {
+            const change = params.data?.call_oi_change
+            if (change > 0) {
+              return { backgroundColor: 'rgba(16, 185, 129, 0.2)', color: '#10b981' }
+            } else if (change < 0) {
+              return { backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }
+            }
+            return { color: theme.palette.text.primary }
           }
+        },
+        {
+          headerName: 'Change',
+          field: 'put_call_ratio_change',
+          width: 150,
+          sortable: true,
+          filter: true,
+          headerClass: 'blue-header',
+          valueFormatter: (params: { value: number }) => {
+            if (params.value === null || params.value === undefined) return '-'
+            return new Intl.NumberFormat('en-IN').format(params.value)
+          },
+          cellStyle: (params: any) => ({
+            color: params.value > 0 ? '#10b981' : params.value < 0 ? '#ef4444' : theme.palette.text.primary,
+            fontWeight: 'bold'
+          })
         },
       ]
     },
