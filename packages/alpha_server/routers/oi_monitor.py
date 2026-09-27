@@ -7,6 +7,16 @@ import pandas as pd
 from datetime import datetime
 from quantquill.data.angel_one.utils.SmartAPIWithInstruments import SmartConnect
 
+# Singleton instance of AngelOneSmartApp
+_platform_instance = None
+
+def get_platform():
+    """Get or create the singleton AngelOneSmartApp instance."""
+    global _platform_instance
+    if _platform_instance is None:
+        _platform_instance = AngelOneSmartApp(instance_name='oi_monitor')
+    return _platform_instance
+
 @register_route(prefix="/oi_monitor", tags=["oi_monitor"])
 class OIMonitorRouter:
     def __init__(self, prefix: str = "", tags: list = None, dependencies: list = None):
@@ -23,7 +33,7 @@ class OIMonitorRouter:
         interval: str = Query(..., description="Interval: (ONE_MINUTE|THREE_MINUTE|FIVE_MINUTE)"),
         date: str = Query(..., description="Date (YYYY-MM-DD)")
     ):
-        platform = AngelOneSmartApp(instance_name='oi_monitor')
+        platform = get_platform()
         client = platform.get_client()
         option_template = f"{underlying}{expiry}{strike}"
         oi_data_df = self.get_oi_data(option_template, interval, date, client)
@@ -37,7 +47,7 @@ class OIMonitorRouter:
             interval: str = Query(..., description="Interval: (ONE_MINUTE|THREE_MINUTE|FIVE_MINUTE)"),
             date: str = Query(..., description="Date (YYYY-MM-DD)")
     ):
-        platform = AngelOneSmartApp(instance_name='oi_monitor')
+        platform = get_platform()
         client = platform.get_client()
         oi_data_list = []
         for strike in strikes:

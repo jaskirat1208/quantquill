@@ -146,6 +146,9 @@ class SmartConnect(api.SmartConnect):
                         self.logger.info("Access token renewed successfully. Please ensure your tokens are upto date.")
                         num_retries -= 1
                         continue
+                    elif(res['errorcode'] == 'AG8001'):
+                        self.logger.error("Invalid token - session is invalid. Please regenerate session by calling create_session().")
+                        raise Exception(f"Session Invalid (AG8001): {res.get('message', 'Invalid Token')}. Please regenerate session.")
 
                     raise Exception(f"API Error: {res['errorcode']} - {res.get('message', '')}")
                 else:

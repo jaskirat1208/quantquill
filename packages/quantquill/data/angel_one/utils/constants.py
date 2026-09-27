@@ -10,6 +10,7 @@ k_USER_ID = 'user_id'
 INSTRUMENTS_URL = 'https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json'
 
 INSTRUMENTS_CACHE_PATH = '/opt/jazz/data/quantquill/smartapi/instruments/'
+SESSION_CACHE_PATH = '/opt/jazz/data/quantquill/smartapi/session/'
 
 
 # Instrument field keys

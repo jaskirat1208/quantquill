@@ -1,5 +1,8 @@
 from typing import Optional
 import pyotp
+import json
+import os
+from datetime import datetime, timedelta
 
 from quantquill.av_core import app as av_core
 from quantquill.av_core.cred_reader import CredentialsReader
@@ -20,8 +23,82 @@ class AngelOneSmartApp(av_core.App):
 
         self.m_client = SmartConnect(api_key=self.m_api_key)
         self.logger.info("ABSmartApp initialized with credentials for Angel One API.")
-        # You can now use the client with the generated session for further API calls    
-        self.create_session()
+        # Try to load cached session first, otherwise create new session
+        if not self._load_cached_session():
+            self.create_session()
+
+    def _get_session_cache_path(self):
+        """Get the path to the session cache file for this user."""
+        os.makedirs(constants.SESSION_CACHE_PATH, exist_ok=True)
+        return os.path.join(constants.SESSION_CACHE_PATH, f"session_{self.m_user_id}.json")
+
+    def _load_cached_session(self):
+        """Load cached session if it exists and is valid."""
+        cache_path = self._get_session_cache_path()
+        
+        if not os.path.exists(cache_path):
+            self.logger.info("No cached session found. Will create new session.")
+            return False
+        
+        try:
+            with open(cache_path, 'r') as f:
+                cached_data = json.load(f)
+            
+            # Check if cached session is for the same user
+            if cached_data.get('user_id') != self.m_user_id:
+                self.logger.warning("Cached session is for different user. Will create new session.")
+                return False
+            
+            # Check if session is expired (JWT tokens typically expire in 24 hours)
+            cache_time = datetime.fromisoformat(cached_data.get('timestamp', ''))
+            if datetime.now() - cache_time > timedelta(hours=23):
+                self.logger.info("Cached session expired. Will create new session.")
+                return False
+            
+            # Load cached tokens
+            self.m_jwt_tok = cached_data.get('jwt_token')
+            self.m_refreshToken = cached_data.get('refresh_token')
+            
+            # Set tokens in client
+            self.m_client.access_token = self.m_jwt_tok
+            self.m_client.refresh_token = self.m_refreshToken
+            self.m_client.userId = self.m_user_id
+            
+            # Verify session is still valid by making a lightweight API call
+            try:
+                res = self.m_client.getProfile(self.m_refreshToken)
+                self.logger.info(f"Cached session is valid. Profile data: {res}")
+                return True
+            except Exception as e:
+                self.logger.warning(f"Cached session invalid: {e}. Will create new session.")
+                # Clear invalid cache to force fresh session on next attempt
+                if os.path.exists(cache_path):
+                    os.remove(cache_path)
+                    self.logger.info(f"Cleared invalid session cache: {cache_path}")
+                return False
+                
+        except Exception as e:
+            self.logger.error(f"Error loading cached session: {e}. Will create new session.")
+            return False
+
+    def _save_session_to_cache(self):
+        """Save current session tokens to cache."""
+        cache_path = self._get_session_cache_path()
+        
+        try:
+            cache_data = {
+                'jwt_token': self.m_jwt_tok,
+                'refresh_token': self.m_refreshToken,
+                'user_id': self.m_user_id,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            with open(cache_path, 'w') as f:
+                json.dump(cache_data, f)
+            
+            self.logger.info(f"Session cached successfully to: {cache_path}")
+        except Exception as e:
+            self.logger.error(f"Error saving session to cache: {e}")
 
     def create_session(self):
         """
@@ -47,6 +124,9 @@ class AngelOneSmartApp(av_core.App):
         res = self.m_client.getProfile(self.m_refreshToken)
         self.m_client.generateToken(self.m_refreshToken)
         self.logger.info(f"Profile data: {res}")
+        
+        # Save session to cache for future use
+        self._save_session_to_cache()
 
 
     def start(self):
@@ -58,6 +138,12 @@ class AngelOneSmartApp(av_core.App):
             self.logger.info(f"Logging out user: {self.m_user_id}")
             self.m_client.terminateSession(self.m_user_id)
             self.logger.info("Session terminated successfully.")
+            
+            # Clear cached session on logout
+            cache_path = self._get_session_cache_path()
+            if os.path.exists(cache_path):
+                os.remove(cache_path)
+                self.logger.info("Cached session cleared.")
         except Exception as e:
             self.logger.error(f"Error occurred while logging out: {e}")
         # Clean up any resources, close connections, etc. here
