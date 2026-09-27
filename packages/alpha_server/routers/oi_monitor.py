@@ -6,6 +6,11 @@ from quantquill.data.angel_one.utils.app import AngelOneSmartApp
 import pandas as pd
 from datetime import datetime
 from quantquill.data.angel_one.utils.SmartAPIWithInstruments import SmartConnect
+import asyncio
+import logging
+import time
+
+logger = logging.getLogger(__name__)
 
 # Singleton instance of AngelOneSmartApp
 _platform_instance = None
@@ -47,24 +52,53 @@ class OIMonitorRouter:
             interval: str = Query(..., description="Interval: (ONE_MINUTE|THREE_MINUTE|FIVE_MINUTE)"),
             date: str = Query(..., description="Date (YYYY-MM-DD)")
     ):
+        start_time = time.time()
+        logger.info(f"[PROFILE] get_multiple_strikes_oi START - underlying={underlying}, strikes={strikes}, expiry={expiry}, interval={interval}, date={date}")
+        
         platform = get_platform()
         client = platform.get_client()
-        oi_data_list = []
+        logger.info(f"[PROFILE] Platform client obtained in {time.time() - start_time:.3f}s")
+        
+        # Create tasks for concurrent execution
+        tasks = []
         for strike in strikes:
             option_template = f"{underlying}{expiry}{strike}"
-            oi_data = self.get_oi_data(option_template, interval, date, client)
-            oi_data_list.append(oi_data)
+            # Run blocking get_oi_data in thread pool
+            task = asyncio.to_thread(self.get_oi_data, option_template, interval, date, client)
+            tasks.append(task)
         
+        logger.info(f"[PROFILE] Created {len(tasks)} tasks in {time.time() - start_time:.3f}s")
+        
+        # Execute all requests concurrently
+        gather_start = time.time()
+        oi_data_list = await asyncio.gather(*tasks)
+        logger.info(f"[PROFILE] asyncio.gather completed in {time.time() - gather_start:.3f}s")
+        
+        concat_start = time.time()
         oi_data_agg_df = pd.concat(oi_data_list).groupby("timestamp").sum().reset_index()
-        return self.calculate_pcr(oi_data_agg_df)
+        logger.info(f"[PROFILE] concat + groupby completed in {time.time() - concat_start:.3f}s")
+        
+        result = self.calculate_pcr(oi_data_agg_df)
+        logger.info(f"[PROFILE] calculate_pcr completed in {time.time() - concat_start:.3f}s")
+        logger.info(f"[PROFILE] get_multiple_strikes_oi TOTAL: {time.time() - start_time:.3f}s")
+        
+        return result
 
 
     def get_oi_data(self, option_template: str,  interval: str, date: str, smartapi_client: SmartConnect):
+        start_time = time.time()
+        logger.info(f"[PROFILE] get_oi_data START - option_template={option_template}")
+        
         call_name = f"{option_template}CE"
         put_name = f"{option_template}PE"
         oi_data = []
+        
         for sym in [call_name, put_name]:
+            sym_start = time.time()
             tok = smartapi_client.getInstrumentBySymbol(sym)
+            logger.info(f"[PROFILE] getInstrumentBySymbol({sym}) completed in {time.time() - sym_start:.3f}s")
+            
+            api_start = time.time()
             resp = smartapi_client.getOIData({
                 "exchange": tok['exch_seg'], 
                 "symboltoken": tok['token'],
@@ -72,12 +106,16 @@ class OIMonitorRouter:
                 "fromdate": f"{date} 00:00",
                 "todate": f"{date} 23:59"
             })
+            logger.info(f"[PROFILE] getOIData({sym}) completed in {time.time() - api_start:.3f}s")
             oi_data.append(resp['data'])
+        
+        logger.info(f"[PROFILE] get_oi_data TOTAL for {option_template}: {time.time() - start_time:.3f}s")
 
         call_oi = oi_data[0]
         put_oi = oi_data[1]
         
         # Create DataFrames from the data
+        df_start = time.time()
         call_df = pd.DataFrame(call_oi)
         put_df = pd.DataFrame(put_oi)
         
@@ -93,6 +131,7 @@ class OIMonitorRouter:
         
         # Sort by timestamp
         merged_df = merged_df.sort_values('timestamp')
+        logger.info(f"[PROFILE] DataFrame operations completed in {time.time() - df_start:.3f}s")
         
         return merged_df
 
